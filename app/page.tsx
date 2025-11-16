@@ -1,6 +1,6 @@
-
 "use client";
 import { useEffect, useState } from "react";
+import TradingChart from "./components/TradingChart";
 
 interface PriceUpdate {
   source: string;
@@ -50,30 +50,40 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="p-4 text-center space-y-6">
+    <div className="p-4 text-center space-y-12">
       <h1 className="text-2xl font-bold">SOL Prices</h1>
 
-      <div>
-        <h2 className="text-xl font-semibold">Binance SOL/USDT</h2>
-        <p className="text-2xl font-bold text-green-600">
-          {binancePrice !== null ? `$${binancePrice.toFixed(2)}` : "Loading..."}
-        </p>
+      {/* Two charts side by side */}
+      <div className="flex flex-wrap gap-4 justify-center">
+        {/* Binance Chart */}
+        <div className="flex-1 min-w-[400px] max-w-[600px]">
+          <h2 className="text-xl font-semibold">Binance SOL/USDT</h2>
+          <p className="text-2xl font-bold text-green-600">
+            {binancePrice !== null ? `$${binancePrice.toFixed(2)}` : "Loading..."}
+          </p>
+          <TradingChart source="Binance" pair="SOL/USDT" />
+        </div>
+
+        {/* Jupiter Chart */}
+        <div className="flex-1 min-w-[400px] max-w-[600px]">
+          <h2 className="text-xl font-semibold">Jupiter SOL/USDC</h2>
+          <p className="text-2xl font-bold text-green-600">
+            {jupiterPrice !== null ? `$${jupiterPrice.toFixed(2)}` : "Loading..."}
+          </p>
+          <TradingChart source="Jupiter" pair="SOL/USDC" />
+        </div>
       </div>
 
-      <div>
-        <h2 className="text-xl font-semibold">Jupiter SOL/USDC</h2>
-        <p className="text-2xl font-bold text-green-600">
-          {jupiterPrice !== null ? `$${jupiterPrice.toFixed(2)}` : "Loading..."}
-        </p>
-      </div>
-
-      <div>
+      {/* Raydium chart in a new row */}
+      <div className="mt-8 max-w-[600px] mx-auto">
         <h2 className="text-xl font-semibold">Raydium SOL/USDC</h2>
         <p className="text-2xl font-bold text-green-600">
           {raydiumPrice !== null ? `$${raydiumPrice.toFixed(2)}` : "Loading..."}
         </p>
+        <TradingChart source="Raydium" pair="SOL/USDC" />
       </div>
 
+      {/* Arbitrage Opportunity */}
       {arb && (
         <div className="mt-8 p-4 border rounded shadow-lg inline-block">
           <h2 className="text-xl font-bold">Arbitrage Opportunity</h2>
@@ -93,4 +103,3 @@ export default function Home() {
     </div>
   );
 }
-
