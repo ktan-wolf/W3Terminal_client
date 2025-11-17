@@ -29,7 +29,7 @@ export default function Home() {
   const [raydiumPrice, setRaydiumPrice] = useState<number | null>(null);
   const [orcaPrice , setOrcaPrice] = useState<number | null>(null);
   const [arb, setArb] = useState<ArbitrageOpportunity | null>(null);
-
+  const [backpackPrice , setBackpackPrice] = useState<number | null>(null);
   const [coinbasePrice, setCoinbasePrice] = useState<number | null>(null);
   const [krakenPrice, setKrakenPrice] = useState<number | null>(null);
   const [okxPrice, setOkxPrice] = useState<number | null>(null);
@@ -60,6 +60,7 @@ export default function Home() {
         if (p.source === "Bitget") setBitgetPrice(p.price);
         if (p.source === "HTX") setHtxPrice(p.price);
         if (p.source === "Orca") setOrcaPrice(p.price);
+        if (p.source === "Backpack") setBackpackPrice(p.price);
       });
 
       setArb(data.opportunity);
@@ -78,6 +79,14 @@ export default function Home() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
         
+        {/* Backpack */}
+        <div>
+          <h2 className="text-xl font-semibold">Backpack SOL/USDC</h2>
+          <p className="text-2xl font-bold text-green-600">
+            {backpackPrice !== null ? `$${backpackPrice.toFixed(2)}` : "Loading..."}
+          </p>
+          <TradingChart source="Backpack" pair="SOL/USDC" />
+        </div>
         {/* Jupiter */}
         <div>
           <h2 className="text-xl font-semibold">Jupiter SOL/USDC</h2>
