@@ -35,6 +35,10 @@ export default function Home() {
   const [bitfinexPrice, setBitfinexPrice] = useState<number | null>(null);
   const [bybitPrice, setBybitPrice] = useState<number | null>(null);
 
+  const [kucoinPrice, setKucoinPrice] = useState<number | null>(null);
+  const [bitgetPrice , setBitgetPrice] = useState<number | null>(null);
+  const [htxPrice , setHtxPrice] = useState<number | null>(null);
+
   useEffect(() => {
     const ws = new WebSocket("ws://127.0.0.1:8081/ws/arb");
 
@@ -51,6 +55,9 @@ export default function Home() {
         if (p.source === "OKX") setOkxPrice(p.price);
         if (p.source === "Bitfinex") setBitfinexPrice(p.price);
         if (p.source === "Bybit") setBybitPrice(p.price);
+        if (p.source === "KuCoin") setKucoinPrice(p.price);
+        if (p.source === "Bitget") setBitgetPrice(p.price);
+        if (p.source === "HTX") setHtxPrice(p.price);
       });
 
       setArb(data.opportunity);
@@ -139,7 +146,30 @@ export default function Home() {
           </p>
           <TradingChart source="Bybit" pair="SOL/USDT" />
         </div>
+        
+        <div>
+          <h2 className="text-xl font-semibold">KuCoin SOL/USDT</h2>
+          <p className="text-2xl font-bold text-green-600">
+            {kucoinPrice !== null ? `$${kucoinPrice.toFixed(2)}` : "Loading..."}
+          </p>
+          <TradingChart source="KuCoin" pair="SOL/USDT" />
+        </div>
 
+         <div>
+          <h2 className="text-xl font-semibold">Bitget SOL/USDT</h2>
+          <p className="text-2xl font-bold text-green-600">
+            {bitgetPrice !== null ? `$${bitgetPrice.toFixed(2)}` : "Loading..."}
+          </p>
+          <TradingChart source="Bitget" pair="SOL/USDT" />
+        </div>
+
+         <div>
+          <h2 className="text-xl font-semibold">HTX SOL/USDT</h2>
+          <p className="text-2xl font-bold text-green-600">
+            {htxPrice !== null ? `$${htxPrice.toFixed(2)}` : "Loading..."}
+          </p>
+          <TradingChart source="HTX" pair="SOL/USDT" />
+        </div>
       </div>
 
       {/* Arbitrage Box */}
