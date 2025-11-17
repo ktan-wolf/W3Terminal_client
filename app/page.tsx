@@ -27,6 +27,7 @@ export default function Home() {
   const [binancePrice, setBinancePrice] = useState<number | null>(null);
   const [jupiterPrice, setJupiterPrice] = useState<number | null>(null);
   const [raydiumPrice, setRaydiumPrice] = useState<number | null>(null);
+  const [orcaPrice , setOrcaPrice] = useState<number | null>(null);
   const [arb, setArb] = useState<ArbitrageOpportunity | null>(null);
 
   const [coinbasePrice, setCoinbasePrice] = useState<number | null>(null);
@@ -58,6 +59,7 @@ export default function Home() {
         if (p.source === "KuCoin") setKucoinPrice(p.price);
         if (p.source === "Bitget") setBitgetPrice(p.price);
         if (p.source === "HTX") setHtxPrice(p.price);
+        if (p.source === "Orca") setOrcaPrice(p.price);
       });
 
       setArb(data.opportunity);
@@ -75,15 +77,7 @@ export default function Home() {
       {/* GRID OF ALL EXCHANGES */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
-        {/* Binance */}
-        <div>
-          <h2 className="text-xl font-semibold">Binance SOL/USDT</h2>
-          <p className="text-2xl font-bold text-green-600">
-            {binancePrice !== null ? `$${binancePrice.toFixed(2)}` : "Loading..."}
-          </p>
-          <TradingChart source="Binance" pair="SOL/USDT" />
-        </div>
-
+        
         {/* Jupiter */}
         <div>
           <h2 className="text-xl font-semibold">Jupiter SOL/USDC</h2>
@@ -101,7 +95,26 @@ export default function Home() {
           </p>
           <TradingChart source="Raydium" pair="SOL/USDC" />
         </div>
+        
+        {/* Orca */}
+        <div>
+          <h2 className="text-xl font-semibold">Orca SOL/USDC</h2>
+          <p className="text-2xl font-bold text-green-600">
+            {orcaPrice !== null ? `$${orcaPrice.toFixed(2)}` : "Loading..."}
+          </p>
+          <TradingChart source="Orca" pair="SOL/USDC" />
+        </div>
 
+        {/* Binance */}
+        <div>
+          <h2 className="text-xl font-semibold">Binance SOL/USDT</h2>
+          <p className="text-2xl font-bold text-green-600">
+            {binancePrice !== null ? `$${binancePrice.toFixed(2)}` : "Loading..."}
+          </p>
+          <TradingChart source="Binance" pair="SOL/USDT" />
+        </div>
+
+        
         {/* Coinbase */}
         <div>
           <h2 className="text-xl font-semibold">Coinbase SOL/USD</h2>
