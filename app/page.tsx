@@ -1,218 +1,192 @@
-
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import TradingChart from "./components/TradingChart";
 
 interface PriceUpdate {
-  source: string;
-  pair: string;
-  price: number;
+    source: string;
+    pair: string;
+    price: number;
 }
 
 interface ArbitrageOpportunity {
-  pair: string;
-  best_buy_source: string;
-  best_buy_price: number;
-  best_sell_source: string;
-  best_sell_price: number;
-  spread_percent: number;
+    pair: string;
+    best_buy_source: string;
+    best_buy_price: number;
+    best_sell_source: string;
+    best_sell_price: number;
+    spread_percent: number;
 }
 
 interface ArbitrageFeed {
-  prices: PriceUpdate[];
-  opportunity: ArbitrageOpportunity;
+    prices: PriceUpdate[];
+    opportunity: ArbitrageOpportunity;
 }
+
+// List of all exchanges/sources to display
+const ALL_SOURCES = [
+    "Binance", "Coinbase", "Kraken", "OKX", "Bitfinex", "Bybit", "KuCoin",
+    "Bitget", "HTX", "Backpack", "Jupiter", "Raydium", "Orca"
+];
 
 export default function Home() {
-  const [binancePrice, setBinancePrice] = useState<number | null>(null);
-  const [jupiterPrice, setJupiterPrice] = useState<number | null>(null);
-  const [raydiumPrice, setRaydiumPrice] = useState<number | null>(null);
-  const [orcaPrice , setOrcaPrice] = useState<number | null>(null);
-  const [arb, setArb] = useState<ArbitrageOpportunity | null>(null);
-  const [backpackPrice , setBackpackPrice] = useState<number | null>(null);
-  const [coinbasePrice, setCoinbasePrice] = useState<number | null>(null);
-  const [krakenPrice, setKrakenPrice] = useState<number | null>(null);
-  const [okxPrice, setOkxPrice] = useState<number | null>(null);
-  const [bitfinexPrice, setBitfinexPrice] = useState<number | null>(null);
-  const [bybitPrice, setBybitPrice] = useState<number | null>(null);
+    // State to hold prices from various sources
+    const [prices, setPrices] = useState<Record<string, number | null>>({});
+    const [arb, setArb] = useState<ArbitrageOpportunity | null>(null);
 
-  const [kucoinPrice, setKucoinPrice] = useState<number | null>(null);
-  const [bitgetPrice , setBitgetPrice] = useState<number | null>(null);
-  const [htxPrice , setHtxPrice] = useState<number | null>(null);
+    // State for user input
+    const [tokenA, setTokenA] = useState<string>("SOL");
+    const [tokenB, setTokenB] = useState<string>("USDC");
+    const [connectionStatus, setConnectionStatus] = useState<string>("Disconnected");
 
-  useEffect(() => {
-    const ws = new WebSocket("ws://127.0.0.1:8081/ws/arb");
+    // Ref to hold the current WebSocket instance
+    const wsRef = useRef<WebSocket | null>(null);
 
-    ws.onmessage = (event) => {
-      const data: ArbitrageFeed = JSON.parse(event.data);
+    // Function to handle price updates from the WebSocket
+    const handlePriceUpdate = useCallback((data: ArbitrageFeed) => {
+        const newPrices: Record<string, number | null> = {};
 
-      data.prices.forEach((p) => {
-        if (p.source === "Binance") setBinancePrice(p.price);
-        if (p.source === "Jupiter") setJupiterPrice(p.price);
-        if (p.source === "Raydium") setRaydiumPrice(p.price);
+        data.prices.forEach((p) => {
+            newPrices[p.source] = p.price;
+        });
 
-        if (p.source === "Coinbase") setCoinbasePrice(p.price);
-        if (p.source === "Kraken") setKrakenPrice(p.price);
-        if (p.source === "OKX") setOkxPrice(p.price);
-        if (p.source === "Bitfinex") setBitfinexPrice(p.price);
-        if (p.source === "Bybit") setBybitPrice(p.price);
-        if (p.source === "KuCoin") setKucoinPrice(p.price);
-        if (p.source === "Bitget") setBitgetPrice(p.price);
-        if (p.source === "HTX") setHtxPrice(p.price);
-        if (p.source === "Orca") setOrcaPrice(p.price);
-        if (p.source === "Backpack") setBackpackPrice(p.price);
-      });
+        // Use functional state update to merge new prices with existing ones
+        setPrices(prevPrices => ({ ...prevPrices, ...newPrices }));
+        setArb(data.opportunity);
+    }, []);
 
-      setArb(data.opportunity);
-    };
+    // Function to establish connection and send subscription message
+    const fetchPrices = useCallback(() => {
+        // 1. Close existing connection if any
+        if (wsRef.current) {
+            wsRef.current.close();
+            wsRef.current = null;
+        }
 
-    return () => ws.close();
-  }, []);
+        const ws = new WebSocket("ws://127.0.0.1:8081/ws/subscribe");
+        wsRef.current = ws;
+        setConnectionStatus("Connecting...");
+        setPrices({}); // Clear previous prices
 
-  return (
-    <div className="p-6">
+        ws.onopen = () => {
+            setConnectionStatus("Subscribed");
+            console.log(`[Frontend] WS connected. Sending request for ${tokenA}/${tokenB}`);
 
-      {/* PAGE TITLE */}
-      <h1 className="text-2xl font-bold mb-6">SOL Prices</h1>
+            // 2. Send the required JSON message to the backend
+            const subscribeMessage = JSON.stringify({
+                token_a: tokenA,
+                token_b: tokenB,
+            });
+            ws.send(subscribeMessage);
+        };
 
-      {/* GRID OF ALL EXCHANGES */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        ws.onmessage = (event) => {
+            try {
+                const data: ArbitrageFeed = JSON.parse(event.data);
+                handlePriceUpdate(data);
+            } catch (e) {
+                console.error("Error parsing WS message:", e);
+            }
+        };
 
-        
-        {/* Backpack */}
-        <div>
-          <h2 className="text-xl font-semibold">Backpack SOL/USDC</h2>
-          <p className="text-2xl font-bold text-green-600">
-            {backpackPrice !== null ? `$${backpackPrice.toFixed(2)}` : "Loading..."}
-          </p>
-          <TradingChart source="Backpack" pair="SOL/USDC" />
+        ws.onclose = () => {
+            setConnectionStatus("Disconnected");
+            console.log("[Frontend] WS closed.");
+        };
+
+        ws.onerror = (err) => {
+            setConnectionStatus("Error");
+            console.error("[Frontend] WS Error:", err);
+        };
+
+    }, [tokenA, tokenB, handlePriceUpdate]);
+
+    // Initial connection attempt on component mount
+    useEffect(() => {
+        fetchPrices();
+        // Cleanup function closes the WebSocket when the component unmounts
+        return () => {
+            if (wsRef.current) {
+                wsRef.current.close();
+            }
+        };
+    }, [fetchPrices]); // Re-run effect when fetchPrices changes (i.e., tokenA/tokenB change)
+
+
+    // Dynamically construct the requested pair string for display
+    const currentPair = `${tokenA.toUpperCase()}/${tokenB.toUpperCase()}`;
+
+
+    return (
+        <div className="p-6">
+            <h1 className="text-3xl font-bold mb-4">Web3 Arbitrage Terminal</h1>
+            <p className={`mb-6 text-sm font-medium ${connectionStatus === 'Subscribed' ? 'text-green-500' : 'text-red-500'}`}>
+                Connection Status: {connectionStatus} for {currentPair}
+            </p>
+
+            {/* --- INPUT CONTROLS --- */}
+            <div className="mb-10 p-4 border rounded bg-gray-50 flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4 items-center">
+                <input
+                    type="text"
+                    value={tokenA}
+                    onChange={(e) => setTokenA(e.target.value.toUpperCase())}
+                    placeholder="Token A (e.g., BTC)"
+                    className="p-2 border rounded w-full md:w-auto"
+                />
+                <span className="text-gray-500">/</span>
+                <input
+                    type="text"
+                    value={tokenB}
+                    onChange={(e) => setTokenB(e.target.value.toUpperCase())}
+                    placeholder="Token B (e.g., USDC)"
+                    className="p-2 border rounded w-full md:w-auto"
+                />
+                <button
+                    onClick={fetchPrices}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full md:w-auto"
+                >
+                    Fetch Prices
+                </button>
+            </div>
+
+            {/* --- ARBITRAGE BOX --- */}
+            {arb && arb.spread_percent !== null && (
+                <div className="mt-6 mb-10 p-4 border rounded shadow-lg inline-block bg-yellow-50 border-yellow-300">
+                    <h2 className="text-xl font-bold mb-2">Arbitrage Opportunity: {arb.pair}</h2>
+                    <p>
+                        Buy on <span className="font-semibold text-blue-600">{arb.best_buy_source}</span> @{" "}
+                        <span className="font-semibold">${arb.best_buy_price.toFixed(4)}</span>
+                    </p>
+                    <p>
+                        Sell on <span className="font-semibold text-red-600">{arb.best_sell_source}</span> @{" "}
+                        <span className="font-semibold">${arb.best_sell_price.toFixed(4)}</span>
+                    </p>
+                    <p className="text-green-700 font-bold mt-2">
+                        Spread: {arb.spread_percent.toFixed(4)}%
+                    </p>
+                </div>
+            )}
+
+            {/* --- PRICE GRID (Dynamically renders all charts with their specific price) --- */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {ALL_SOURCES.map((exchange) => (
+                    <div key={exchange}>
+                        <h2 className="text-xl font-semibold">{exchange} {currentPair}</h2>
+                        <p className="text-2xl font-bold text-green-600">
+                            {prices[exchange] !== null && prices[exchange] !== undefined
+                                ? `$${prices[exchange]?.toFixed(4)}`
+                                : "Loading..."}
+                        </p>
+                        {/* CRITICAL CHANGE: Pass the specific price for this exchange 
+                            as the latestPrice prop to the TradingChart component.
+                        */}
+                        <TradingChart
+                            source={exchange}
+                            pair={currentPair}
+                            latestPrice={prices[exchange] ?? null}
+                        />
+                    </div>
+                ))}
+            </div>
         </div>
-        {/* Jupiter */}
-        <div>
-          <h2 className="text-xl font-semibold">Jupiter SOL/USDC</h2>
-          <p className="text-2xl font-bold text-green-600">
-            {jupiterPrice !== null ? `$${jupiterPrice.toFixed(2)}` : "Loading..."}
-          </p>
-          <TradingChart source="Jupiter" pair="SOL/USDC" />
-        </div>
-
-        {/* Raydium */}
-        <div>
-          <h2 className="text-xl font-semibold">Raydium SOL/USDC</h2>
-          <p className="text-2xl font-bold text-green-600">
-            {raydiumPrice !== null ? `$${raydiumPrice.toFixed(2)}` : "Loading..."}
-          </p>
-          <TradingChart source="Raydium" pair="SOL/USDC" />
-        </div>
-        
-        {/* Orca */}
-        <div>
-          <h2 className="text-xl font-semibold">Orca SOL/USDC</h2>
-          <p className="text-2xl font-bold text-green-600">
-            {orcaPrice !== null ? `$${orcaPrice.toFixed(2)}` : "Loading..."}
-          </p>
-          <TradingChart source="Orca" pair="SOL/USDC" />
-        </div>
-
-        {/* Binance */}
-        <div>
-          <h2 className="text-xl font-semibold">Binance SOL/USDT</h2>
-          <p className="text-2xl font-bold text-green-600">
-            {binancePrice !== null ? `$${binancePrice.toFixed(2)}` : "Loading..."}
-          </p>
-          <TradingChart source="Binance" pair="SOL/USDT" />
-        </div>
-
-        
-        {/* Coinbase */}
-        <div>
-          <h2 className="text-xl font-semibold">Coinbase SOL/USD</h2>
-          <p className="text-2xl font-bold text-green-600">
-            {coinbasePrice !== null ? `$${coinbasePrice.toFixed(2)}` : "Loading..."}
-          </p>
-          <TradingChart source="Coinbase" pair="SOL/USD" />
-        </div>
-
-        {/* Kraken */}
-        <div>
-          <h2 className="text-xl font-semibold">Kraken SOL/USD</h2>
-          <p className="text-2xl font-bold text-green-600">
-            {krakenPrice !== null ? `$${krakenPrice.toFixed(2)}` : "Loading..."}
-          </p>
-          <TradingChart source="Kraken" pair="SOL/USD" />
-        </div>
-
-        {/* OKX */}
-        <div>
-          <h2 className="text-xl font-semibold">OKX SOL/USDT</h2>
-          <p className="text-2xl font-bold text-green-600">
-            {okxPrice !== null ? `$${okxPrice.toFixed(2)}` : "Loading..."}
-          </p>
-          <TradingChart source="OKX" pair="SOL/USDT" />
-        </div>
-
-        {/* Bitfinex */}
-        <div>
-          <h2 className="text-xl font-semibold">Bitfinex SOL/USD</h2>
-          <p className="text-2xl font-bold text-green-600">
-            {bitfinexPrice !== null ? `$${bitfinexPrice.toFixed(2)}` : "Loading..."}
-          </p>
-          <TradingChart source="Bitfinex" pair="SOL/USD" />
-        </div>
-
-        {/* Bybit */}
-        <div>
-          <h2 className="text-xl font-semibold">Bybit SOL/USDT</h2>
-          <p className="text-2xl font-bold text-green-600">
-            {bybitPrice !== null ? `$${bybitPrice.toFixed(2)}` : "Loading..."}
-          </p>
-          <TradingChart source="Bybit" pair="SOL/USDT" />
-        </div>
-        
-        <div>
-          <h2 className="text-xl font-semibold">KuCoin SOL/USDT</h2>
-          <p className="text-2xl font-bold text-green-600">
-            {kucoinPrice !== null ? `$${kucoinPrice.toFixed(2)}` : "Loading..."}
-          </p>
-          <TradingChart source="KuCoin" pair="SOL/USDT" />
-        </div>
-
-         <div>
-          <h2 className="text-xl font-semibold">Bitget SOL/USDT</h2>
-          <p className="text-2xl font-bold text-green-600">
-            {bitgetPrice !== null ? `$${bitgetPrice.toFixed(2)}` : "Loading..."}
-          </p>
-          <TradingChart source="Bitget" pair="SOL/USDT" />
-        </div>
-
-         <div>
-          <h2 className="text-xl font-semibold">HTX SOL/USDT</h2>
-          <p className="text-2xl font-bold text-green-600">
-            {htxPrice !== null ? `$${htxPrice.toFixed(2)}` : "Loading..."}
-          </p>
-          <TradingChart source="HTX" pair="SOL/USDT" />
-        </div>
-      </div>
-
-      {/* Arbitrage Box */}
-      {arb && arb.spread_percent != null && (
-        <div className="mt-10 p-4 border rounded shadow-lg inline-block">
-          <h2 className="text-xl font-bold">Arbitrage Opportunity</h2>
-          <p>
-            Buy on <span className="font-semibold">{arb.best_buy_source}</span> @{" "}
-            <span className="font-semibold">${arb.best_buy_price.toFixed(2)}</span>
-          </p>
-          <p>
-            Sell on <span className="font-semibold">{arb.best_sell_source}</span> @{" "}
-            <span className="font-semibold">${arb.best_sell_price.toFixed(2)}</span>
-          </p>
-          <p className="text-green-700 font-bold">
-            Spread: {arb.spread_percent.toFixed(2)}%
-          </p>
-        </div>
-      )}
-
-    </div>
-  );
+    );
 }
-
