@@ -1,142 +1,157 @@
-
 "use client";
 import React, { useEffect, useRef } from "react";
-import {
-  createChart,
-  ISeriesApi,
-  CandlestickData,
-  UTCTimestamp,
-  ColorType,
-  IChartApi,
+import { 
+    createChart, 
+    ColorType, 
+    IChartApi, 
+    ISeriesApi, 
+    UTCTimestamp,
+    CrosshairMode
 } from "lightweight-charts";
 
 interface TradingChartProps {
-  source: string;
-  pair: string;
-  latestPrice: number | null; // NEW: track latest price from parent
+    source: string;
+    pair: string;
+    latestPrice: number | null;
 }
 
+// --- COLOR PALETTES ---
+const UP_COLOR = {
+    line: "#10b981",                    // Emerald-500
+    top: "rgba(16, 185, 129, 0.4)",     // Emerald Gradient Start
+    bottom: "rgba(16, 185, 129, 0.0)",  // Transparent End
+};
+
+const DOWN_COLOR = {
+    line: "#ef4444",                    // Red-500
+    top: "rgba(239, 68, 68, 0.4)",      // Red Gradient Start
+    bottom: "rgba(239, 68, 68, 0.0)",   // Transparent End
+};
+
 export default function TradingChart({ source, pair, latestPrice }: TradingChartProps) {
-  const chartContainerRef = useRef<HTMLDivElement>(null);
-  const candleSeriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
-  const lastCandleRef = useRef<CandlestickData<UTCTimestamp> | null>(null);
-  const chartRef = useRef<IChartApi | null>(null);
-
-  // --- Effect 1: Initialize Chart and Fetch Historical Data ---
-  useEffect(() => {
-    if (!chartContainerRef.current) return;
-
-    // Create the chart instance
-    const chart = createChart(chartContainerRef.current, {
-      width: chartContainerRef.current.clientWidth,
-      height: 300,
-      layout: {
-        background: { type: ColorType.Solid, color: "#1e1e1e" },
-        textColor: "#d1d4dc",
-      },
-      grid: { vertLines: { color: "#444" }, horzLines: { color: "#444" } },
-      rightPriceScale: { borderColor: "#555" },
-      timeScale: { borderColor: "#555", timeVisible: true, secondsVisible: true },
-    });
-    chartRef.current = chart;
-
-    // Add the candlestick series
-    const candleSeries = chart.addCandlestickSeries({
-      upColor: "#4caf50",
-      downColor: "#f44336",
-      borderUpColor: "#4caf50",
-      borderDownColor: "#f44336",
-      wickUpColor: "#4caf50",
-      wickDownColor: "#f44336",
-    });
-    candleSeriesRef.current = candleSeries;
+    const chartContainerRef = useRef<HTMLDivElement>(null);
+    const chartRef = useRef<IChartApi | null>(null);
+    const seriesRef = useRef<ISeriesApi<"Area"> | null>(null);
     
-    // Reset last candle reference for the new chart/pair
-    lastCandleRef.current = null;
+    // Track previous price to determine Up/Down direction
+    const prevPriceRef = useRef<number | null>(null);
 
-    // Fetch historical data on load (requires new source/pair)
-    const fetchHistoricalData = async () => {
-      try {
-        const res = await fetch(`/historical?pair=${pair}&source=${source}`);
-        const data: { price: number; timestamp: string }[] = await res.json();
+    // 1. Initialize Chart
+    useEffect(() => {
+        if (!chartContainerRef.current) return;
 
-        // Convert raw price history into simple "candles" for initial display
-        const candles: CandlestickData<UTCTimestamp>[] = data.map((d) => ({
-          // Ensure time is UTC Timestamp (seconds)
-          time: (Math.floor(new Date(d.timestamp).getTime() / 1000) as UTCTimestamp),
-          open: d.price,
-          high: d.price,
-          low: d.price,
-          close: d.price,
-        }));
+        chartContainerRef.current.style.minHeight = "240px"; 
 
-        if (candles.length > 0) {
-          candleSeries.setData(candles);
-          lastCandleRef.current = candles[candles.length - 1];
+        const chart = createChart(chartContainerRef.current, {
+            layout: {
+                background: { type: ColorType.Solid, color: "transparent" },
+                textColor: "#737373",
+                fontFamily: "Inter, sans-serif",
+            },
+            grid: {
+                vertLines: { visible: false },
+                horzLines: { color: "rgba(255, 255, 255, 0.05)" },
+            },
+            width: chartContainerRef.current.clientWidth,
+            height: chartContainerRef.current.clientHeight,
+            timeScale: {
+                timeVisible: true,
+                secondsVisible: true,
+                borderVisible: false,
+                rightOffset: 20,      // Space for the "head"
+                fixLeftEdge: false,   // Scrolls off screen (Ticker style)
+                fixRightEdge: true,   // Snaps to new data
+            },
+            rightPriceScale: {
+                borderVisible: false,
+                scaleMargins: {
+                    top: 0.3,
+                    bottom: 0.1,
+                },
+            },
+            crosshair: {
+                mode: CrosshairMode.Magnet,
+                vertLine: {
+                    color: "rgba(255, 255, 255, 0.1)",
+                    style: 3,
+                    labelBackgroundColor: "#262626",
+                },
+                horzLine: {
+                    color: "rgba(255, 255, 255, 0.1)",
+                    style: 3,
+                    labelBackgroundColor: "#262626",
+                },
+            },
+        });
+
+        // Initialize with UP colors by default
+        const newSeries = chart.addAreaSeries({
+            lineColor: UP_COLOR.line,
+            topColor: UP_COLOR.top,
+            bottomColor: UP_COLOR.bottom,
+            lineWidth: 2,
+            crosshairMarkerVisible: true,
+            crosshairMarkerRadius: 4,
+        });
+
+        chartRef.current = chart;
+        seriesRef.current = newSeries;
+
+        const handleResize = () => {
+            if (chartContainerRef.current) {
+                chart.applyOptions({ 
+                    width: chartContainerRef.current.clientWidth,
+                    height: chartContainerRef.current.clientHeight,
+                });
+            }
+        };
+        
+        const observer = new ResizeObserver(handleResize);
+        observer.observe(chartContainerRef.current);
+
+        return () => {
+            observer.disconnect();
+            chart.remove();
+        };
+    }, []);
+
+    // 2. Update Logic (Color Switching)
+    useEffect(() => {
+        if (!seriesRef.current || latestPrice === null) return;
+
+        const now = Math.floor(Date.now() / 1000) as UTCTimestamp;
+        const prevPrice = prevPriceRef.current;
+
+        // DETERMINE COLOR
+        if (prevPrice !== null) {
+            if (latestPrice < prevPrice) {
+                // Price went DOWN -> Switch to Red
+                seriesRef.current.applyOptions({
+                    lineColor: DOWN_COLOR.line,
+                    topColor: DOWN_COLOR.top,
+                    bottomColor: DOWN_COLOR.bottom,
+                });
+            } else if (latestPrice > prevPrice) {
+                // Price went UP -> Switch to Green
+                seriesRef.current.applyOptions({
+                    lineColor: UP_COLOR.line,
+                    topColor: UP_COLOR.top,
+                    bottomColor: UP_COLOR.bottom,
+                });
+            }
+            // If price is equal, we keep the existing color
         }
-      } catch (e) {
-        console.error(`Error fetching history for ${source} ${pair}:`, e);
-      }
-    };
 
-    fetchHistoricalData();
+        // UPDATE CHART DATA
+        seriesRef.current.update({
+            time: now,
+            value: latestPrice,
+        });
 
+        // Update history for next comparison
+        prevPriceRef.current = latestPrice;
 
-    // Handle resize
-    const handleResize = () => {
-      if (chart && chartContainerRef.current) {
-        chart.applyOptions({ width: chartContainerRef.current.clientWidth });
-      }
-    };
-    window.addEventListener("resize", handleResize);
+    }, [latestPrice]);
 
-    // Cleanup function runs when component unmounts or source/pair changes
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      if (chart) {
-        chart.remove();
-      }
-    };
-  }, [source, pair]); // Re-run when source or pair changes
-
-  // --- Effect 2: Update Chart on new latestPrice prop ---
-  useEffect(() => {
-    // Only update if we have a valid price and the series is initialized
-    if (latestPrice === null || latestPrice === undefined || !candleSeriesRef.current) return;
-
-    // Use current time as the candle time (in seconds)
-    const time = Math.floor(Date.now() / 1000) as UTCTimestamp;
-    const lastCandle = lastCandleRef.current;
-
-    let newCandle: CandlestickData<UTCTimestamp>;
-
-    // Check if we need to start a new candle (time has advanced)
-    // For a simple real-time tick chart, we update the last candle on every price tick.
-    // If the time is different from the last saved time, we assume a new candle starts.
-    if (!lastCandle || lastCandle.time < time) {
-      // Start a new candle
-      newCandle = {
-        time,
-        open: latestPrice,
-        high: latestPrice,
-        low: latestPrice,
-        close: latestPrice,
-      };
-    } else {
-      // Update existing candle (extend it with the new tick)
-      newCandle = {
-        time: lastCandle.time,
-        open: lastCandle.open,
-        high: Math.max(lastCandle.high, latestPrice),
-        low: Math.min(lastCandle.low, latestPrice),
-        close: latestPrice,
-      };
-    }
-
-    // Apply the update
-    candleSeriesRef.current.update(newCandle);
-    lastCandleRef.current = newCandle;
-  }, [latestPrice]); // Re-run whenever latestPrice changes
-
-  return <div ref={chartContainerRef} className="w-full h-[300px]" />;
+    return <div ref={chartContainerRef} className="w-full h-full min-h-[240px]" />;
 }
