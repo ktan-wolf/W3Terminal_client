@@ -167,25 +167,25 @@ export default function Home() {
             )}
 
             {/* --- PRICE GRID (Dynamically renders all charts with their specific price) --- */}
+            
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {ALL_SOURCES.map((exchange) => (
-                    <div key={exchange}>
-                        <h2 className="text-xl font-semibold">{exchange} {currentPair}</h2>
-                        <p className="text-2xl font-bold text-green-600">
-                            {prices[exchange] !== null && prices[exchange] !== undefined
-                                ? `$${prices[exchange]?.toFixed(4)}`
-                                : "Loading..."}
-                        </p>
-                        {/* CRITICAL CHANGE: Pass the specific price for this exchange 
-                            as the latestPrice prop to the TradingChart component.
-                        */}
-                        <TradingChart
-                            source={exchange}
-                            pair={currentPair}
-                            latestPrice={prices[exchange] ?? null}
-                        />
-                    </div>
-                ))}
+                {ALL_SOURCES
+                    .filter((exchange) => prices[exchange] !== undefined && prices[exchange] !== null)
+                    .map((exchange) => (
+                        <div key={exchange}>
+                            <h2 className="text-xl font-semibold">{exchange} {currentPair}</h2>
+
+                            <p className="text-2xl font-bold text-green-600">
+                                ${prices[exchange]!.toFixed(4)}
+                            </p>
+
+                            <TradingChart
+                                source={exchange}
+                                pair={currentPair}
+                                latestPrice={prices[exchange] ?? null}
+                            />
+                        </div>
+                    ))}
             </div>
         </div>
     );
