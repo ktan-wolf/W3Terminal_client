@@ -11,27 +11,14 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// --- UI COMPONENTS ---
+// --- COMPONENTS (Card, Badge, BackgroundBeams) ---
+// ... (Keep your existing Card, Badge, and BackgroundBeams components exactly as they were) ...
 
 const Card = ({ children, className }: { children: React.ReactNode; className?: string }) => (
   <div className={cn("rounded-xl border border-white/10 bg-black/40 backdrop-blur-md shadow-xl", className)}>
     {children}
   </div>
 );
-
-const Badge = ({ children, variant = "default" }: { children: React.ReactNode; variant?: "default" | "success" | "danger" | "warning" }) => {
-  const variants = {
-    default: "bg-blue-500/10 text-blue-400 border-blue-500/20",
-    success: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-    danger: "bg-red-500/10 text-red-400 border-red-500/20",
-    warning: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
-  };
-  return (
-    <span className={cn("px-2 py-0.5 rounded-full text-xs font-medium border", variants[variant])}>
-      {children}
-    </span>
-  );
-};
 
 const BackgroundBeams = () => {
   return (
@@ -48,6 +35,7 @@ interface PriceUpdate {
     source: string;
     pair: string;
     price: number;
+    timestamp?: number;
 }
 
 interface ArbitrageOpportunity {
@@ -64,7 +52,7 @@ interface ArbitrageFeed {
     opportunity: ArbitrageOpportunity;
 }
 
-// List of all exchanges/sources to display
+// Exchange list
 const ALL_SOURCES = [
     "Binance", "Coinbase", "Kraken", "OKX", "Bitfinex", "Bybit", "KuCoin",
     "Bitget", "HTX", "Backpack", "Jupiter", "Raydium", "Orca"
@@ -81,13 +69,15 @@ export default function Home() {
 
     const wsRef = useRef<WebSocket | null>(null);
 
-    const handlePriceUpdate = useCallback((data: ArbitrageFeed) => {
-        const newPrices: Record<string, number | null> = {};
-        data.prices.forEach((p) => {
-            newPrices[p.source] = p.price;
+    // Helper to update prices map from a list of updates
+    const updatePriceMap = useCallback((updates: PriceUpdate[]) => {
+        setPrices(prev => {
+            const next = { ...prev };
+            updates.forEach(u => {
+                next[u.source] = u.price;
+            });
+            return next;
         });
-        setPrices(prevPrices => ({ ...prevPrices, ...newPrices }));
-        setArb(data.opportunity);
     }, []);
 
     const fetchPrices = useCallback(() => {
@@ -100,7 +90,7 @@ export default function Home() {
         wsRef.current = ws;
         setConnectionStatus("Connecting...");
         setIsConnecting(true);
-        setPrices({});
+        setPrices({}); // Clear old prices on new connection
 
         ws.onopen = () => {
             setConnectionStatus("Subscribed");
@@ -111,8 +101,19 @@ export default function Home() {
 
         ws.onmessage = (event) => {
             try {
-                const data: ArbitrageFeed = JSON.parse(event.data);
-                handlePriceUpdate(data);
+                const data = JSON.parse(event.data);
+
+                // --- LOGIC UPDATE: Handle History vs Live ---
+                if (Array.isArray(data)) {
+                    // Case 1: It's the HISTORY buffer (PriceUpdate[])
+                    // We just update the prices map so the chart has data points
+                    updatePriceMap(data);
+                } else {
+                    // Case 2: It's a LIVE ArbitrageFeed
+                    const feed = data as ArbitrageFeed;
+                    updatePriceMap(feed.prices);
+                    setArb(feed.opportunity);
+                }
             } catch (e) {
                 console.error("Error parsing WS message:", e);
             }
@@ -129,7 +130,7 @@ export default function Home() {
             console.error("WS Error:", err);
         };
 
-    }, [tokenA, tokenB, handlePriceUpdate]);
+    }, [tokenA, tokenB, updatePriceMap]);
 
     useEffect(() => {
         fetchPrices();
@@ -142,13 +143,10 @@ export default function Home() {
 
     return (
         <div className="min-h-screen w-full relative text-neutral-200 font-sans selection:bg-indigo-500/30">
-            {/* Animated Background */}
             <BackgroundBeams />
-
-            {/* Main Content Container */}
             <div className="relative z-10 max-w-7xl mx-auto p-6 space-y-8">
                 
-                {/* --- HEADER --- */}
+                {/* HEADER */}
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-white/5 pb-6">
                     <div>
                         <h1 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-neutral-400 tracking-tight">
@@ -156,7 +154,7 @@ export default function Home() {
                         </h1>
                         <p className="text-neutral-400 mt-2 flex items-center gap-2 text-sm">
                             <Activity className="w-4 h-4" /> 
-                            Real-time Cross-CEX/DEX Arbitrage Monitor
+                            In-Memory High Frequency Monitor
                         </p>
                     </div>
                     <div className="mt-4 md:mt-0 flex items-center gap-3">
@@ -171,43 +169,33 @@ export default function Home() {
                     </div>
                 </div>
 
-                {/* --- CONTROL BAR --- */}
+                {/* CONTROL BAR */}
                 <Card className="p-1">
                     <div className="flex flex-col md:flex-row gap-2 p-2">
+                        {/* INPUTS */}
                         <div className="relative flex-1 group">
-                            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-neutral-500 group-focus-within:text-indigo-400 transition-colors">
-                                <span className="text-xs font-bold">BASE</span>
-                            </div>
                             <input
                                 type="text"
                                 value={tokenA}
                                 onChange={(e) => setTokenA(e.target.value.toUpperCase())}
-                                className="w-full bg-neutral-900/50 border border-white/5 rounded-lg py-3 pl-12 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all placeholder:text-neutral-600"
+                                className="w-full bg-neutral-900/50 border border-white/5 rounded-lg py-3 pl-4 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all"
                                 placeholder="BTC"
                             />
                         </div>
-
-                        <div className="flex items-center justify-center text-neutral-600">
-                            <ArrowRightLeft className="w-5 h-5" />
-                        </div>
-
+                        <div className="flex items-center justify-center text-neutral-600"><ArrowRightLeft className="w-5 h-5" /></div>
                         <div className="relative flex-1 group">
-                            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-neutral-500 group-focus-within:text-indigo-400 transition-colors">
-                                <span className="text-xs font-bold">QUOTE</span>
-                            </div>
                             <input
                                 type="text"
                                 value={tokenB}
                                 onChange={(e) => setTokenB(e.target.value.toUpperCase())}
-                                className="w-full bg-neutral-900/50 border border-white/5 rounded-lg py-3 pl-12 pr-4 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all placeholder:text-neutral-600"
+                                className="w-full bg-neutral-900/50 border border-white/5 rounded-lg py-3 pl-4 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all"
                                 placeholder="USDC"
                             />
                         </div>
-
                         <button
                             onClick={fetchPrices}
                             disabled={isConnecting}
-                            className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-medium py-3 px-8 rounded-lg transition-all shadow-[0_0_20px_rgba(79,70,229,0.3)] hover:shadow-[0_0_30px_rgba(79,70,229,0.5)]"
+                            className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-medium py-3 px-8 rounded-lg transition-all"
                         >
                             <RefreshCw className={cn("w-4 h-4", isConnecting && "animate-spin")} />
                             {isConnecting ? "Syncing..." : "Update Stream"}
@@ -215,83 +203,48 @@ export default function Home() {
                     </div>
                 </Card>
 
-                {/* --- ARBITRAGE HERO SECTION --- */}
-                {arb && arb.spread_percent !== null ? (
-                    <div className="relative group">
-                        <div className="absolute -inset-1 bg-gradient-to-r from-indigo-500 to-emerald-500 rounded-2xl blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-                        <Card className="relative p-6 md:p-8 flex flex-col md:flex-row justify-between items-center bg-neutral-900/90">
-                            <div className="flex flex-col gap-2 mb-4 md:mb-0">
-                                <div className="flex items-center gap-2">
-                                    <Badge variant="success">Opportunity Detected</Badge>
-                                    <span className="text-neutral-400 text-sm font-mono">{arb.pair}</span>
+                {/* ARBITRAGE CARD (Only shows when spread > 0) */}
+                {arb && arb.spread_percent > 0 && (
+                    <Card className="relative p-6 md:p-8 bg-neutral-900/90 border-indigo-500/30">
+                        <div className="flex flex-col md:flex-row justify-between items-center gap-6">
+                            <div>
+                                <div className="text-sm text-indigo-400 font-bold mb-1">ARBITRAGE DETECTED</div>
+                                <div className="text-4xl font-bold text-white">{arb.spread_percent.toFixed(3)}% Spread</div>
+                                <div className="text-neutral-500 font-mono text-sm mt-1">{arb.pair}</div>
+                            </div>
+                            <div className="flex gap-4 w-full md:w-auto">
+                                <div className="flex-1 p-4 bg-emerald-950/30 border border-emerald-500/20 rounded text-center">
+                                    <div className="text-xs text-emerald-400 font-bold">BUY LOW ({arb.best_buy_source})</div>
+                                    <div className="text-lg font-mono text-white">${arb.best_buy_price.toFixed(4)}</div>
                                 </div>
-                                <div className="flex items-baseline gap-1">
-                                    <span className="text-5xl font-bold text-white tracking-tighter">
-                                        {arb.spread_percent.toFixed(3)}%
-                                    </span>
-                                    <span className="text-neutral-400 font-medium">Spread</span>
+                                <div className="flex-1 p-4 bg-red-950/30 border border-red-500/20 rounded text-center">
+                                    <div className="text-xs text-red-400 font-bold">SELL HIGH ({arb.best_sell_source})</div>
+                                    <div className="text-lg font-mono text-white">${arb.best_sell_price.toFixed(4)}</div>
                                 </div>
                             </div>
-
-                            <div className="flex items-center gap-6 w-full md:w-auto">
-                                <div className="flex-1 p-4 rounded-lg bg-emerald-950/30 border border-emerald-500/20 text-center">
-                                    <div className="text-xs text-emerald-400 uppercase font-bold tracking-wider mb-1">Buy Low</div>
-                                    <div className="text-lg font-bold text-white">{arb.best_buy_source}</div>
-                                    <div className="text-emerald-400 font-mono">${arb.best_buy_price.toFixed(4)}</div>
-                                </div>
-                                <div className="hidden md:flex text-neutral-500">
-                                    <TrendingUp className="w-8 h-8" />
-                                </div>
-                                <div className="flex-1 p-4 rounded-lg bg-red-950/30 border border-red-500/20 text-center">
-                                    <div className="text-xs text-red-400 uppercase font-bold tracking-wider mb-1">Sell High</div>
-                                    <div className="text-lg font-bold text-white">{arb.best_sell_source}</div>
-                                    <div className="text-red-400 font-mono">${arb.best_sell_price.toFixed(4)}</div>
-                                </div>
-                            </div>
-                        </Card>
-                    </div>
-                ) : (
-                    <div className="flex items-center justify-center p-12 rounded-xl border border-white/5 bg-neutral-900/30 border-dashed">
-                        <p className="text-neutral-500">Waiting for arbitrage opportunities...</p>
-                    </div>
+                        </div>
+                    </Card>
                 )}
 
-                {/* --- MARKET GRID (2 COLUMNS) --- */}
-                <div>
-                     <h3 className="text-lg font-semibold text-neutral-200 mb-4 flex items-center gap-2">
-                        <Activity className="w-4 h-4 text-indigo-400" /> 
-                        Live Market Feed
-                    </h3>
-                    
-                    {/* CHANGED: grid-cols-1 md:grid-cols-2 ONLY (removed lg:grid-cols-3) */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {ALL_SOURCES
-                            .filter((exchange) => prices[exchange] !== undefined && prices[exchange] !== null)
-                            .map((exchange) => (
-                                <Card key={exchange} className="p-5 hover:bg-neutral-800/50 transition-colors group">
-                                    <div className="flex justify-between items-start mb-4">
-                                        <div>
-                                            <h2 className="text-lg font-bold text-white group-hover:text-indigo-300 transition-colors">{exchange}</h2>
-                                            <p className="text-xs text-neutral-500 font-mono">{currentPair}</p>
-                                        </div>
-                                        <div className="text-right">
-                                            <p className="text-xl font-bold text-emerald-400 font-mono tracking-tight">
-                                                ${prices[exchange]!.toFixed(4)}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    {/* CHANGED: Height increased to h-[240px] for better visibility */}
-                                    <div className="h-[240px] w-full mt-2 rounded overflow-hidden opacity-80 hover:opacity-100 transition-opacity">
-                                        <TradingChart
-                                            source={exchange}
-                                            pair={currentPair}
-                                            latestPrice={prices[exchange] ?? null}
-                                        />
-                                    </div>
-                                </Card>
-                            ))}
-                    </div>
+                {/* MARKET GRID */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {ALL_SOURCES
+                        .filter((exchange) => prices[exchange] !== undefined && prices[exchange] !== null)
+                        .map((exchange) => (
+                            <Card key={exchange} className="p-5 hover:bg-neutral-800/50 transition-colors">
+                                <div className="flex justify-between items-start mb-4">
+                                    <h2 className="text-lg font-bold text-white">{exchange}</h2>
+                                    <p className="text-xl font-bold text-emerald-400 font-mono">${prices[exchange]!.toFixed(4)}</p>
+                                </div>
+                                <div className="h-[240px] w-full mt-2 rounded overflow-hidden">
+                                    <TradingChart
+                                        source={exchange}
+                                        pair={currentPair}
+                                        latestPrice={prices[exchange] ?? null}
+                                    />
+                                </div>
+                            </Card>
+                    ))}
                 </div>
             </div>
         </div>
