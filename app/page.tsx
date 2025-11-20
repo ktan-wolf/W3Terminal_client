@@ -364,7 +364,7 @@ export default function Home() {
                                 {/* Base Token */}
                                 <div>
                                     <label className="block text-cyan-400/60 text-[10px] uppercase tracking-widest mb-2 font-bold">BASE ASSET</label>
-                                    <input type="text" value={tokenA} onChange={(e) => setTokenA(e.target.value.toUpperCase())} className="w-full bg-black/90 border border-cyan-500/30 rounded-lg py-3 px-4 text-xl sm:text-2xl font-black text-cyan-400 focus:outline-none" placeholder="e.g BTC" />
+                                    <input type="text" value={tokenA} onChange={(e) => setTokenA(e.target.value.toUpperCase())} className="w-full bg-black/90 border border-cyan-500/30 rounded-lg py-3 px-4 text-xl sm:text-2xl font-black text-cyan-400 focus:outline-none" placeholder="e.g. BTC" />
                                 </div>
 
                                 <div className="flex justify-center pb-2">
@@ -376,7 +376,7 @@ export default function Home() {
                                 {/* Quote Token */}
                                 <div>
                                     <label className="block text-purple-400/60 text-[10px] uppercase tracking-widest mb-2 font-bold">QUOTE ASSET</label>
-                                    <input type="text" value={tokenB} onChange={(e) => setTokenB(e.target.value.toUpperCase())} className="w-full bg-black/90 border border-purple-500/30 rounded-lg py-3 px-4 text-xl sm:text-2xl font-black text-purple-400 focus:outline-none" placeholder="e.g USDC" />
+                                    <input type="text" value={tokenB} onChange={(e) => setTokenB(e.target.value.toUpperCase())} className="w-full bg-black/90 border border-purple-500/30 rounded-lg py-3 px-4 text-xl sm:text-2xl font-black text-purple-400 focus:outline-none" placeholder="e.g. USDC" />
                                 </div>
 
                                 <NeonButton onClick={fetchPrices} disabled={isConnecting}>
