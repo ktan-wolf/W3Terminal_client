@@ -6,19 +6,19 @@ interface ExchangeLogoProps {
 
 // Logo mapping - you can replace these URLs with your own logo sources
 const LOGO_SOURCES: Record<string, string> = {
-  Binance: "https://cryptologos.cc/logos/binance-coin-bnb-logo.png",
-  Coinbase: "https://cryptologos.cc/logos/coinbase-coin-usdc-logo.png",
-  Kraken: "https://seeklogo.com/images/K/kraken-logo-6C9635516C-seeklogo.com.png",
-  OKX: "https://seeklogo.com/images/O/okx-logo-BC669BA32F-seeklogo.com.png",
-  Bitfinex: "https://seeklogo.com/images/B/bitfinex-logo-4E8BE6F1F3-seeklogo.com.png",
-  Bybit: "https://seeklogo.com/images/B/bybit-logo-45C82EEC0E-seeklogo.com.png",
-  KuCoin: "https://cryptologos.cc/logos/kucoin-shares-kcs-logo.png",
-  Bitget: "https://seeklogo.com/images/B/bitget-logo-4B7C23B24F-seeklogo.com.png",
-  HTX: "https://seeklogo.com/images/H/htx-logo-9C35447BE5-seeklogo.com.png",
-  Backpack: "https://pbs.twimg.com/profile_images/1582831413929181185/rPBn_KPr_400x400.jpg",
-  Jupiter: "https://pbs.twimg.com/profile_images/1618311983888297985/RyDbay-p_400x400.jpg",
-  Raydium: "https://pbs.twimg.com/profile_images/1792895635089264640/FJB04_MY_400x400.jpg",
-  Orca: "https://pbs.twimg.com/profile_images/1768306824946884608/uHXMDQcZ_400x400.jpg"
+  Binance: "/logos/binance.png",
+  Coinbase: "/logos/coinbase.png",
+  Kraken: "/logos/kraken.png",
+  OKX: "/logos/OKX.png",
+  Bitfinex: "/logos/bitfinex.png",
+  Bybit: "/logos/bybit.png",
+  KuCoin: "/logos/kucoin.png",
+  Bitget: "/logos/bitget.png",
+  HTX: "/logos/htx.png",
+  Backpack: "/logos/backpack.png",
+  Jupiter: "/logos/jupiter.png",
+  Raydium: "/logos/raydium.png",
+  Orca: "/logos/orca.png"
 };
 
 // Fallback colors for gradient backgrounds when logo fails
