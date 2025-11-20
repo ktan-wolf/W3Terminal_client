@@ -4,7 +4,6 @@ interface ExchangeLogoProps {
   exchange: string;
 }
 
-// Logo mapping - you can replace these URLs with your own logo sources
 const LOGO_SOURCES: Record<string, string> = {
   Binance: "/logos/binance.png",
   Coinbase: "/logos/coinbase.png",
@@ -21,7 +20,6 @@ const LOGO_SOURCES: Record<string, string> = {
   Orca: "/logos/orca.png"
 };
 
-// Fallback colors for gradient backgrounds when logo fails
 const FALLBACK_COLORS: Record<string, { from: string; to: string }> = {
   Binance: { from: "from-yellow-500", to: "to-yellow-600" },
   Coinbase: { from: "from-blue-500", to: "to-blue-600" },
@@ -43,7 +41,6 @@ const ExchangeLogo: React.FC<ExchangeLogoProps> = ({ exchange }) => {
   const logoUrl = LOGO_SOURCES[exchange];
   const fallbackColor = FALLBACK_COLORS[exchange] || { from: "from-cyan-500", to: "to-purple-500" };
 
-  // If logo failed to load or doesn't exist, show fallback
   if (hasError || !logoUrl) {
     return (
       <div className={`w-6 h-6 rounded-full bg-gradient-to-br ${fallbackColor.from} ${fallbackColor.to} flex items-center justify-center text-white text-xs font-black shadow-lg`}>

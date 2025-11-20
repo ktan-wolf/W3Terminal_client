@@ -15,7 +15,6 @@ interface TradingChartProps {
     latestPrice: number | null;
 }
 
-// --- COLOR PALETTES ---
 const UP_COLOR = {
     line: "#10b981",                    // Emerald-500
     top: "rgba(16, 185, 129, 0.4)",     // Emerald Gradient Start
@@ -33,10 +32,8 @@ export default function TradingChart({ source, pair, latestPrice }: TradingChart
     const chartRef = useRef<IChartApi | null>(null);
     const seriesRef = useRef<ISeriesApi<"Area"> | null>(null);
     
-    // Track previous price to determine Up/Down direction
     const prevPriceRef = useRef<number | null>(null);
 
-    // 1. Initialize Chart
     useEffect(() => {
         if (!chartContainerRef.current) return;
 
@@ -58,9 +55,9 @@ export default function TradingChart({ source, pair, latestPrice }: TradingChart
                 timeVisible: true,
                 secondsVisible: true,
                 borderVisible: false,
-                rightOffset: 20,      // Space for the "head"
-                fixLeftEdge: false,   // Scrolls off screen (Ticker style)
-                fixRightEdge: true,   // Snaps to new data
+                rightOffset: 20,
+                fixLeftEdge: false,
+                fixRightEdge: true,
             },
             rightPriceScale: {
                 borderVisible: false,
@@ -84,7 +81,6 @@ export default function TradingChart({ source, pair, latestPrice }: TradingChart
             },
         });
 
-        // Initialize with UP colors by default
         const newSeries = chart.addAreaSeries({
             lineColor: UP_COLOR.line,
             topColor: UP_COLOR.top,
@@ -115,40 +111,33 @@ export default function TradingChart({ source, pair, latestPrice }: TradingChart
         };
     }, []);
 
-    // 2. Update Logic (Color Switching)
     useEffect(() => {
         if (!seriesRef.current || latestPrice === null) return;
 
         const now = Math.floor(Date.now() / 1000) as UTCTimestamp;
         const prevPrice = prevPriceRef.current;
 
-        // DETERMINE COLOR
         if (prevPrice !== null) {
             if (latestPrice < prevPrice) {
-                // Price went DOWN -> Switch to Red
                 seriesRef.current.applyOptions({
                     lineColor: DOWN_COLOR.line,
                     topColor: DOWN_COLOR.top,
                     bottomColor: DOWN_COLOR.bottom,
                 });
             } else if (latestPrice > prevPrice) {
-                // Price went UP -> Switch to Green
                 seriesRef.current.applyOptions({
                     lineColor: UP_COLOR.line,
                     topColor: UP_COLOR.top,
                     bottomColor: UP_COLOR.bottom,
                 });
             }
-            // If price is equal, we keep the existing color
         }
 
-        // UPDATE CHART DATA
         seriesRef.current.update({
             time: now,
             value: latestPrice,
         });
 
-        // Update history for next comparison
         prevPriceRef.current = latestPrice;
 
     }, [latestPrice]);

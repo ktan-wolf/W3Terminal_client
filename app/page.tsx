@@ -16,7 +16,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// --- CYBERPUNK PREMIUM COMPONENTS ---
 
 const MatrixRain = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -68,7 +67,6 @@ const MatrixRain = () => {
 
 const CyberGrid = () => (
   <div className="absolute inset-0 overflow-hidden">
-    {/* Perspective grid */}
     <div className="absolute inset-0" style={{
       backgroundImage: `
         linear-gradient(rgba(0, 255, 255, 0.03) 2px, transparent 2px),
@@ -81,13 +79,11 @@ const CyberGrid = () => (
       transformOrigin: 'center top',
     }}></div>
     
-    {/* Animated scan lines */}
     <div className="absolute inset-0">
       <div className="absolute w-full h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent animate-scan-line"></div>
       <div className="absolute w-full h-px bg-gradient-to-r from-transparent via-purple-500/50 to-transparent animate-scan-line-2"></div>
     </div>
     
-    {/* Holographic light beams */}
     <div className="absolute top-0 left-1/4 w-1 h-full bg-gradient-to-b from-cyan-500/20 via-transparent to-transparent blur-sm"></div>
     <div className="absolute top-0 right-1/4 w-1 h-full bg-gradient-to-b from-purple-500/20 via-transparent to-transparent blur-sm"></div>
   </div>
@@ -95,7 +91,6 @@ const CyberGrid = () => (
 
 const HolographicCard = ({ children, className, featured }: { children: React.ReactNode; className?: string; featured?: boolean }) => (
   <div className={cn("group relative", className)}>
-    {/* Animated border gradient */}
     <div className={cn(
       "absolute -inset-[1px] rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-sm",
       featured 
@@ -103,16 +98,12 @@ const HolographicCard = ({ children, className, featured }: { children: React.Re
         : "bg-gradient-to-r from-cyan-500/50 to-purple-500/50"
     )}></div>
     
-    {/* Main card */}
     <div className="relative rounded-2xl bg-black/80 backdrop-blur-2xl border border-cyan-500/20 overflow-hidden">
-      {/* Holographic overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
       
-      {/* Corner accents */}
       <div className="absolute top-0 left-0 w-20 h-20 border-t-2 border-l-2 border-cyan-500/30"></div>
       <div className="absolute bottom-0 right-0 w-20 h-20 border-b-2 border-r-2 border-purple-500/30"></div>
       
-      {/* Scan line effect */}
       <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,255,255,0.03)_50%)] bg-[length:100%_4px] pointer-events-none"></div>
       
       <div className="relative z-10">
@@ -141,10 +132,8 @@ const NeonButton = ({ children, onClick, disabled, variant = "primary" }: any) =
       "active:scale-95 hover:scale-105"
     )}
   >
-    {/* Shine effect */}
     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-1000"></div>
     
-    {/* Corner highlights */}
     <div className="absolute top-0 left-0 w-2 h-2 bg-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
     <div className="absolute bottom-0 right-0 w-2 h-2 bg-purple-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
     
@@ -169,7 +158,6 @@ const DataStream = ({ label, value, trend }: { label: string; value: string; tre
   </div>
 );
 
-// --- TYPES ---
 interface PriceUpdate {
     source: string;
     pair: string;
@@ -224,7 +212,7 @@ export default function Home() {
             wsRef.current = null;
         }
 
-        const ws = new WebSocket("ws://127.0.0.1:8081/ws/subscribe");
+        const ws = new WebSocket("wss://exchange-terminal.onrender.com/ws/subscribe");
         wsRef.current = ws;
         setConnectionStatus("Connecting...");
         setIsConnecting(true);
@@ -330,7 +318,6 @@ export default function Home() {
                             </div>
                         </div>
 
-                        {/* Connection Status */}
                         <div className="relative">
                             <div className={cn(
                                 "relative px-6 py-3 rounded-lg border-2 backdrop-blur-sm transition-all duration-300",
@@ -351,7 +338,6 @@ export default function Home() {
                         </div>
                     </div>
 
-                    {/* Control Terminal */}
                     <HolographicCard className="w-full max-w-[1050px] mx-auto px-4">
                         <div className="p-6">
                             <div className="flex items-center gap-3 mb-6">
@@ -373,7 +359,6 @@ export default function Home() {
                                     </div>
                                 </div>
 
-                                {/* Quote Token */}
                                 <div>
                                     <label className="block text-purple-400/60 text-[10px] uppercase tracking-widest mb-2 font-bold">QUOTE ASSET</label>
                                     <input type="text" value={tokenB} onChange={(e) => setTokenB(e.target.value.toUpperCase())} className="w-full bg-black/90 border border-purple-500/30 rounded-lg py-3 px-4 text-xl sm:text-2xl font-black text-purple-400 focus:outline-none" placeholder="e.g. USDC" />
@@ -388,7 +373,6 @@ export default function Home() {
                     </HolographicCard>
                 </div>
 
-                {/* Arbitrage Alert */}
                 {arb && arb.spread_percent > 0 && (
                     <div className="mb-8 w-full max-w-[1050px] mx-auto px-2 sm:px-4">
                         <HolographicCard featured className="overflow-hidden">
@@ -413,7 +397,6 @@ export default function Home() {
                                     </div>
 
                                     <div className="flex flex-wrap items-center gap-4 sm:gap-6 ml-auto">
-                                        {/* Buy */}
                                         <div className="w-full sm:w-48 md:w-52 relative group">
                                             <div className="absolute -inset-[1px] bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-lg opacity-30 group-hover:opacity-60 blur-sm transition-opacity"></div>
                                             <div className="relative bg-black/90 border border-emerald-500/40 rounded-lg p-4">
@@ -426,7 +409,6 @@ export default function Home() {
                                             </div>
                                         </div>
 
-                                        {/* Sell */}
                                         <div className="w-full sm:w-48 md:w-52 relative group">
                                             <div className="absolute -inset-[1px] bg-gradient-to-br from-red-500 to-pink-500 rounded-lg opacity-30 group-hover:opacity-60 blur-sm transition-opacity"></div>
                                             <div className="relative bg-black/90 border border-red-500/40 rounded-lg p-4">
@@ -445,7 +427,6 @@ export default function Home() {
                     </div>
                 )}
 
-                {/* Market Surveillance */}
                 <div className="space-y-6 w-full max-w-[1050px] mx-auto px-2 sm:px-4">
                     <div className="flex items-center gap-4">
                         <div className="w-1 h-8 bg-gradient-to-b from-cyan-500 to-purple-500"></div>
@@ -477,7 +458,6 @@ export default function Home() {
                                         </div>
                                     </div>
 
-                                    {/* Chart */}
                                     <div className="relative h-[240px] sm:h-[240px] md:h-[240px] w-full rounded-lg overflow-hidden border border-cyan-500/20 bg-black/50">
                                         <TradingChart source={exchange} pair={currentPair} latestPrice={prices[exchange]} />
                                     </div>
@@ -490,7 +470,6 @@ export default function Home() {
 
 
             
-            {/* Custom Keyframe Animations */}
             <style jsx global>{`
                 @keyframes scan-line {
                     0% { top: 0%; opacity: 0; }
