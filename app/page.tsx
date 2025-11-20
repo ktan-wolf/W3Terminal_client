@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import TradingChart from "./components/TradingChart";
+import ExchangeLogo from "./components/ExchangeLogo";
 import { 
   Wifi, 
   WifiOff, 
@@ -194,6 +195,8 @@ const ALL_SOURCES = [
     "Binance", "Coinbase", "Kraken", "OKX", "Bitfinex", "Bybit", "KuCoin",
     "Bitget", "HTX", "Backpack", "Jupiter", "Raydium", "Orca"
 ];
+
+
 
 export default function Home() {
     const [prices, setPrices] = useState<Record<string, number | null>>({});
@@ -421,7 +424,7 @@ export default function Home() {
                         <HolographicCard featured className="overflow-hidden">
                             <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-purple-500/10 to-pink-500/10 animate-gradient"></div>
                             <div className="relative p-5">
-                                <div className="flex items-center justify-between gap-6">
+                                <div className="flex flex-wrap items-center justify-between gap-6">
                                     {/* Spread Indicator */}
                                     <div className="flex items-center gap-3">
                                         <div className="relative">
@@ -441,7 +444,7 @@ export default function Home() {
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center gap-6 ml-auto">
+                                    <div className="flex flex-wrap items-center gap-6 ml-auto">
                                         {/* Buy Signal */}
                                         <div className="w-52 relative group">
                                             <div className="absolute -inset-[1px] bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-lg opacity-30 group-hover:opacity-60 blur-sm transition-opacity"></div>
@@ -514,9 +517,12 @@ export default function Home() {
                                         {/* Exchange Header */}
                                         <div className="flex items-start justify-between mb-6">
                                             <div>
-                                                <h3 className="text-xl font-black text-cyan-400 mb-1">
-                                                    {exchange.toUpperCase()}
-                                                </h3>
+                                                <div className="flex items-center gap-3 mb-1">
+                                                    <ExchangeLogo exchange={exchange} />
+                                                    <h3 className="text-xl font-black text-cyan-400">
+                                                        {exchange.toUpperCase()}
+                                                    </h3>
+                                                </div>
                                                 <p className="text-cyan-400/40 text-[10px] uppercase tracking-widest font-bold">
                                                     {currentPair}
                                                 </p>
