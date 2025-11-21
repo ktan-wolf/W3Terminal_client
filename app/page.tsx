@@ -212,7 +212,7 @@ export default function Home() {
             wsRef.current = null;
         }
 
-        const ws = new WebSocket("wss://exchange-terminal.onrender.com/ws/subscribe");
+        const ws = new WebSocket("wss://w3terminal-server.onrender.com/ws/subscribe");
         wsRef.current = ws;
         setConnectionStatus("Connecting...");
         setIsConnecting(true);
