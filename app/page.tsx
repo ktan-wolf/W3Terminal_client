@@ -290,8 +290,8 @@ export default function Home() {
                                 <div>
                                     <GlitchText>
                                         <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter">
-                                            <span className="text-cyan-400">AETHER</span>
-                                            <span className="text-purple-400">NET</span>
+                                            <span className="text-cyan-400">W3:</span>
+                                            <span className="text-purple-400">Terminal</span>
                                         </h1>
                                     </GlitchText>
                                     <div className="flex items-center gap-3 mt-2">
