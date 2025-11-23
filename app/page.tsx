@@ -188,21 +188,6 @@ const NeonButton = ({ children, onClick, disabled, variant = "primary" }: any) =
   </button>
 );
 
-// const DataStream = ({ label, value, trend }: { label: string; value: string; trend?: 'up' | 'down' }) => (
-//   <div className="flex items-center justify-between py-3 border-b border-cyan-500/10 group hover:border-cyan-500/30 transition-colors">
-//     <span className="text-cyan-400/60 text-xs uppercase tracking-wider font-mono">{label}</span>
-//     <div className="flex items-center gap-2">
-//       <span className="text-white font-mono font-bold">{value}</span>
-//       {trend && (
-//         <div className={cn(
-//           "w-0 h-0 border-l-[4px] border-r-[4px] border-l-transparent border-r-transparent",
-//           trend === 'up' ? "border-b-[6px] border-b-emerald-400" : "border-t-[6px] border-t-red-400"
-//         )}></div>
-//       )}
-//     </div>
-//   </div>
-// );
-
 interface PriceUpdate {
     source: string;
     pair: string;
@@ -262,6 +247,7 @@ export default function Home() {
         setConnectionStatus("Connecting...");
         setIsConnecting(true);
         setPrices({});
+        setArb(null);
 
         ws.onopen = () => {
             setConnectionStatus("Subscribed");
@@ -366,7 +352,7 @@ export default function Home() {
 
                         <div className="relative">
                             <div className={cn(
-                                "relative px-6 py-3 rounded-lg border-2 backdrop-blur-sm transition-all duration-300",
+                                "relative px-2 py-1 rounded-lg border-2 backdrop-blur-sm transition-all duration-300",
                                 isConnected ? "border-emerald-400 bg-emerald-500/10 shadow-[0_0_30px_rgba(16,185,129,0.3)]" : "border-red-400 bg-red-500/10 shadow-[0_0_30px_rgba(239,68,68,0.3)]" ,
                                 isConnecting && "border-amber-400 bg-amber-500/10"
                             )}>
@@ -482,7 +468,7 @@ export default function Home() {
                 )}
 
                 <div className="space-y-6 w-full max-w-[1050px] mx-auto px-2 sm:px-4">
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-wrap items-center gap-4">
                         <div className="w-1 h-8 bg-gradient-to-b from-cyan-500 to-purple-500"></div>
                         <h2 className="text-xl sm:text-2xl font-black uppercase tracking-wider">
                             <span className="text-cyan-400">Market</span>
