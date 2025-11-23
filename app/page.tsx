@@ -223,8 +223,8 @@ const ALL_SOURCES = [
 export default function Home() {
     const [prices, setPrices] = useState<Record<string, number | null>>({});
     const [arb, setArb] = useState<ArbitrageOpportunity | null>(null);
-    const [tokenA, setTokenA] = useState<string>("");
-    const [tokenB, setTokenB] = useState<string>("");
+    const [tokenA, setTokenA] = useState<string>("SOL");
+    const [tokenB, setTokenB] = useState<string>("USDC");
     const [connectionStatus, setConnectionStatus] = useState<string>("Disconnected");
     const [isConnecting, setIsConnecting] = useState(false);
 
