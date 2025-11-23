@@ -513,7 +513,7 @@ export default function Home() {
                             ALL_SOURCES.filter((ex) => prices[ex] !== undefined).map((exchange) => (
                                 <HolographicCard key={exchange} className="transform hover:scale-[1.02] transition-all duration-300">
                                     <div className="p-4 sm:p-6">
-                                        <div className="flex items-start justify-between mb-4 sm:mb-6">
+                                        <div className="flex flex-wrap items-start justify-between mb-4 sm:mb-6">
                                             <div>
                                                 <div className="flex items-center gap-3 mb-1">
                                                     <ExchangeLogo exchange={exchange} />
