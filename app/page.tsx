@@ -188,6 +188,32 @@ const NeonButton = ({ children, onClick, disabled, variant = "primary" }: any) =
   </button>
 );
 
+const ArbitrageSkeleton = () => (
+  <div className="mb-8 w-full max-w-[1050px] mx-auto px-2 sm:px-4">
+    <HolographicCard featured className="overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/5 via-purple-500/5 to-pink-500/5 animate-pulse"></div>
+      <div className="relative p-5">
+        <div className="flex flex-wrap items-center justify-between gap-6">
+          
+          <div className="flex items-center gap-3">
+            <div className="relative w-7 h-7 rounded-full bg-cyan-500/20 animate-pulse"></div>
+            <div>
+              <div className="h-3 w-24 bg-cyan-500/20 rounded animate-pulse mb-2"></div>
+              <div className="h-10 w-40 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 rounded animate-pulse"></div>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-4 sm:gap-6 ml-auto w-full sm:w-auto">
+            <div className="w-full sm:w-48 md:w-52 h-[88px] relative rounded-lg bg-emerald-500/5 border border-emerald-500/10 animate-pulse"></div>
+            <div className="w-full sm:w-48 md:w-52 h-[88px] relative rounded-lg bg-red-500/5 border border-red-500/10 animate-pulse"></div>
+          </div>
+          
+        </div>
+      </div>
+    </HolographicCard>
+  </div>
+);
+
 interface PriceUpdate {
     source: string;
     pair: string;
@@ -297,7 +323,6 @@ export default function Home() {
 
     return (
         <div className="min-h-screen w-full relative bg-black text-white font-mono overflow-x-hidden px-3 sm:px-6 md:px-12 lg:px-20">
-            {/* Animated Background */}
             <div className="fixed inset-0 z-0">
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-purple-900/20 via-black to-black"></div>
                 <CyberGrid />
@@ -305,12 +330,10 @@ export default function Home() {
             </div>
 
             <div className="relative z-10 max-w-[1800px] mx-auto px-2 sm:px-4 py-6">
-                {/* Header */}
                 <div className="mb-12">
                     <div className="flex flex-wrap items-start justify-between mb-8 gap-6">
                         <div className="space-y-4">
                             <div className="flex items-center gap-4">
-                                {/* Logo */}
                                 <div className="relative">
                                     <div className="absolute inset-0 bg-cyan-500 blur-xl opacity-50 animate-pulse"></div>
                                     <div className="relative w-16 h-16 bg-gradient-to-br from-cyan-500 to-purple-600 rounded-lg flex items-center justify-center border-2 border-cyan-400/50">
@@ -318,7 +341,6 @@ export default function Home() {
                                     </div>
                                 </div>
 
-                                {/* Title */}
                                 <div>
                                     <GlitchText>
                                         <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black tracking-tighter">
@@ -383,7 +405,6 @@ export default function Home() {
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr_auto] gap-4 sm:gap-6 items-end">
-                                {/* Base Token */}
                                 <div>
                                     <label className="block text-cyan-400/60 text-[10px] uppercase tracking-widest mb-2 font-bold">BASE ASSET</label>
                                     <input type="text" value={tokenA} onChange={(e) => setTokenA(e.target.value.toUpperCase())} className="w-full bg-black/90 border border-cyan-500/30 rounded-lg py-3 px-4 text-xl sm:text-2xl font-black text-cyan-400 focus:outline-none" placeholder="e.g. BTC" />
@@ -413,60 +434,62 @@ export default function Home() {
                     </HolographicCard>
                 </div>
 
-                {arb && arb.spread_percent > 0 && (
-                    <div className="mb-8 w-full max-w-[1050px] mx-auto px-2 sm:px-4">
-                        <HolographicCard featured className="overflow-hidden">
-                            <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-purple-500/10 to-pink-500/10 animate-gradient"></div>
-                            <div className="relative p-5">
-                                <div className="flex flex-wrap items-center justify-between gap-6">
-                                    {/* Spread */}
-                                    <div className="flex items-center gap-3">
-                                        <div className="relative">
-                                            <div className="absolute inset-0 bg-cyan-400 blur-lg animate-pulse"></div>
-                                            <Target className="relative w-7 h-7 text-cyan-400 animate-spin-slow" />
-                                        </div>
-                                        <div>
-                                            <div className="text-cyan-400 text-[10px] uppercase tracking-widest font-black mb-1 flex items-center gap-2">
-                                                <div className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse"></div>
-                                                OPPORTUNITY
+                {(isConnecting || (isConnected && !arb)) ? (
+                    <ArbitrageSkeleton />
+                ) : (
+                    arb && arb.spread_percent > 0 && (
+                        <div className="mb-8 w-full max-w-[1050px] mx-auto px-2 sm:px-4">
+                            <HolographicCard featured className="overflow-hidden">
+                                <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/10 via-purple-500/10 to-pink-500/10 animate-gradient"></div>
+                                <div className="relative p-5">
+                                    <div className="flex flex-wrap items-center justify-between gap-6">
+                                        <div className="flex items-center gap-3">
+                                            <div className="relative">
+                                                <div className="absolute inset-0 bg-cyan-400 blur-lg animate-pulse"></div>
+                                                <Target className="relative w-7 h-7 text-cyan-400 animate-spin-slow" />
                                             </div>
-                                            <div className="text-3xl sm:text-4xl font-black tabular-nums bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 animate-gradient">
-                                                {arb.spread_percent.toFixed(3)}%
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex flex-wrap items-center gap-4 sm:gap-6 ml-auto">
-                                        <div className="w-full sm:w-48 md:w-52 relative group">
-                                            <div className="absolute -inset-[1px] bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-lg opacity-30 group-hover:opacity-60 blur-sm transition-opacity"></div>
-                                            <div className="relative bg-black/90 border border-emerald-500/40 rounded-lg p-4">
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <TrendingUp className="w-4 h-4 text-emerald-400" />
-                                                    <span className="text-emerald-400 text-[10px] uppercase tracking-widest font-black">BUY</span>
+                                            <div>
+                                                <div className="text-cyan-400 text-[10px] uppercase tracking-widest font-black mb-1 flex items-center gap-2">
+                                                    <div className="w-1.5 h-1.5 bg-cyan-400 rounded-full animate-pulse"></div>
+                                                    OPPORTUNITY
                                                 </div>
-                                                <div className="text-xl sm:text-2xl font-black text-emerald-400 mb-1 tabular-nums">${arb.best_buy_price.toFixed(4)}</div>
-                                                <div className="text-emerald-400/60 text-xs font-bold">{arb.best_buy_source}</div>
+                                                <div className="text-3xl sm:text-4xl font-black tabular-nums bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 animate-gradient">
+                                                    {arb.spread_percent.toFixed(3)}%
+                                                </div>
                                             </div>
                                         </div>
 
-                                        <div className="w-full sm:w-48 md:w-52 relative group">
-                                            <div className="absolute -inset-[1px] bg-gradient-to-br from-red-500 to-pink-500 rounded-lg opacity-30 group-hover:opacity-60 blur-sm transition-opacity"></div>
-                                            <div className="relative bg-black/90 border border-red-500/40 rounded-lg p-4">
-                                                <div className="flex items-center gap-2 mb-2">
-                                                    <TrendingUp className="w-4 h-4 text-red-400 rotate-180" />
-                                                    <span className="text-red-400 text-[10px] uppercase tracking-widest font-black">SELL</span>
+                                        <div className="flex flex-wrap items-center gap-4 sm:gap-6 ml-auto">
+                                            <div className="w-full sm:w-48 md:w-52 relative group">
+                                                <div className="absolute -inset-[1px] bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-lg opacity-30 group-hover:opacity-60 blur-sm transition-opacity"></div>
+                                                <div className="relative bg-black/90 border border-emerald-500/40 rounded-lg p-4">
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <TrendingUp className="w-4 h-4 text-emerald-400" />
+                                                        <span className="text-emerald-400 text-[10px] uppercase tracking-widest font-black">BUY</span>
+                                                    </div>
+                                                    <div className="text-xl sm:text-2xl font-black text-emerald-400 mb-1 tabular-nums">${arb.best_buy_price.toFixed(4)}</div>
+                                                    <div className="text-emerald-400/60 text-xs font-bold">{arb.best_buy_source}</div>
                                                 </div>
-                                                <div className="text-xl sm:text-2xl font-black text-red-400 mb-1 tabular-nums">${arb.best_sell_price.toFixed(4)}</div>
-                                                <div className="text-red-400/60 text-xs font-bold">{arb.best_sell_source}</div>
+                                            </div>
+
+                                            <div className="w-full sm:w-48 md:w-52 relative group">
+                                                <div className="absolute -inset-[1px] bg-gradient-to-br from-red-500 to-pink-500 rounded-lg opacity-30 group-hover:opacity-60 blur-sm transition-opacity"></div>
+                                                <div className="relative bg-black/90 border border-red-500/40 rounded-lg p-4">
+                                                    <div className="flex items-center gap-2 mb-2">
+                                                        <TrendingUp className="w-4 h-4 text-red-400 rotate-180" />
+                                                        <span className="text-red-400 text-[10px] uppercase tracking-widest font-black">SELL</span>
+                                                    </div>
+                                                    <div className="text-xl sm:text-2xl font-black text-red-400 mb-1 tabular-nums">${arb.best_sell_price.toFixed(4)}</div>
+                                                    <div className="text-red-400/60 text-xs font-bold">{arb.best_sell_source}</div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        </HolographicCard>
-                    </div>
+                            </HolographicCard>
+                        </div>
+                    )
                 )}
-
                 <div className="space-y-6 w-full max-w-[1050px] mx-auto px-2 sm:px-4">
                     <div className="flex flex-wrap items-center gap-4">
                         <div className="w-1 h-8 bg-gradient-to-b from-cyan-500 to-purple-500"></div>
@@ -487,7 +510,6 @@ export default function Home() {
                              <ChartSkeleton key={`skeleton-${i}`} />
                            ))
                         ) : (
-                            /* Render actual charts once price data exists */
                             ALL_SOURCES.filter((ex) => prices[ex] !== undefined).map((exchange) => (
                                 <HolographicCard key={exchange} className="transform hover:scale-[1.02] transition-all duration-300">
                                     <div className="p-4 sm:p-6">
