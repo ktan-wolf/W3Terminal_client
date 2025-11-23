@@ -251,6 +251,7 @@ export default function Home() {
         setConnectionStatus("Connecting...");
         setIsConnecting(true);
         setPrices({}); // Clear previous prices to trigger loading state
+        setArb(null);
 
         ws.onopen = () => {
             setConnectionStatus("Subscribed");
