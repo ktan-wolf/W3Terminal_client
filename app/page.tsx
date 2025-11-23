@@ -12,7 +12,9 @@ import {
   Zap,
   Target,
   Radio,
-  ChevronRight
+  ChevronRight,
+  Loader2,
+  Binary
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -98,7 +100,7 @@ const HolographicCard = ({ children, className, featured }: { children: React.Re
         : "bg-gradient-to-r from-cyan-500/50 to-purple-500/50"
     )}></div>
     
-    <div className="relative rounded-2xl bg-black/80 backdrop-blur-2xl border border-cyan-500/20 overflow-hidden">
+    <div className="relative rounded-2xl bg-black/80 backdrop-blur-2xl border border-cyan-500/20 overflow-hidden h-full">
       <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
       
       <div className="absolute top-0 left-0 w-20 h-20 border-t-2 border-l-2 border-cyan-500/30"></div>
@@ -106,12 +108,61 @@ const HolographicCard = ({ children, className, featured }: { children: React.Re
       
       <div className="absolute inset-0 bg-[linear-gradient(transparent_50%,rgba(0,255,255,0.03)_50%)] bg-[length:100%_4px] pointer-events-none"></div>
       
-      <div className="relative z-10">
+      <div className="relative z-10 h-full">
         {children}
       </div>
     </div>
   </div>
 );
+
+// --- NEW: Loading Skeleton Component ---
+const ChartSkeleton = () => (
+  <HolographicCard className="h-full">
+    <div className="p-4 sm:p-6 h-full flex flex-col">
+      {/* Header Skeleton */}
+      <div className="flex items-start justify-between mb-6">
+        <div className="space-y-2">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full bg-cyan-500/10 animate-pulse"></div>
+            <div className="h-6 w-24 bg-cyan-500/10 rounded animate-pulse"></div>
+          </div>
+          <div className="h-3 w-16 bg-cyan-500/10 rounded animate-pulse ml-11"></div>
+        </div>
+        <div className="flex flex-col items-end space-y-2">
+          <div className="h-8 w-32 bg-cyan-500/10 rounded animate-pulse"></div>
+          <div className="h-4 w-12 bg-emerald-500/10 rounded animate-pulse"></div>
+        </div>
+      </div>
+
+      {/* Chart Area Skeleton */}
+      <div className="relative flex-1 min-h-[240px] w-full rounded-lg overflow-hidden border border-cyan-500/10 bg-black/30">
+        {/* Scanning Effect */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-500/5 to-transparent animate-scan-line opacity-50"></div>
+        
+        {/* Central Loading Indicator */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+          <div className="relative">
+            <div className="absolute inset-0 bg-cyan-500 blur-lg opacity-20 animate-pulse"></div>
+            <Binary className="w-8 h-8 text-cyan-500/40 animate-pulse" />
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="w-1 h-1 bg-cyan-500 rounded-full animate-bounce [animation-delay:-0.3s]"></span>
+            <span className="w-1 h-1 bg-cyan-500 rounded-full animate-bounce [animation-delay:-0.15s]"></span>
+            <span className="w-1 h-1 bg-cyan-500 rounded-full animate-bounce"></span>
+          </div>
+          <span className="text-[10px] font-mono text-cyan-500/40 tracking-widest uppercase">Est. Link...</span>
+        </div>
+
+        {/* Grid Lines */}
+        <div className="absolute inset-0" style={{
+           backgroundImage: 'linear-gradient(rgba(0, 255, 255, 0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 255, 0.02) 1px, transparent 1px)',
+           backgroundSize: '20px 20px'
+        }}></div>
+      </div>
+    </div>
+  </HolographicCard>
+);
+// ---------------------------------------
 
 const GlitchText = ({ children, className }: { children: React.ReactNode; className?: string }) => (
   <div className={cn("relative inline-block", className)}>
@@ -143,21 +194,6 @@ const NeonButton = ({ children, onClick, disabled, variant = "primary" }: any) =
   </button>
 );
 
-const DataStream = ({ label, value, trend }: { label: string; value: string; trend?: 'up' | 'down' }) => (
-  <div className="flex items-center justify-between py-3 border-b border-cyan-500/10 group hover:border-cyan-500/30 transition-colors">
-    <span className="text-cyan-400/60 text-xs uppercase tracking-wider font-mono">{label}</span>
-    <div className="flex items-center gap-2">
-      <span className="text-white font-mono font-bold">{value}</span>
-      {trend && (
-        <div className={cn(
-          "w-0 h-0 border-l-[4px] border-r-[4px] border-l-transparent border-r-transparent",
-          trend === 'up' ? "border-b-[6px] border-b-emerald-400" : "border-t-[6px] border-t-red-400"
-        )}></div>
-      )}
-    </div>
-  </div>
-);
-
 interface PriceUpdate {
     source: string;
     pair: string;
@@ -183,8 +219,6 @@ const ALL_SOURCES = [
     "Binance", "Coinbase", "Kraken", "OKX", "Bitfinex", "Bybit", "KuCoin",
     "Bitget", "HTX", "Backpack", "Jupiter", "Raydium", "Orca"
 ];
-
-
 
 export default function Home() {
     const [prices, setPrices] = useState<Record<string, number | null>>({});
@@ -216,7 +250,7 @@ export default function Home() {
         wsRef.current = ws;
         setConnectionStatus("Connecting...");
         setIsConnecting(true);
-        setPrices({});
+        setPrices({}); // Clear previous prices to trigger loading state
 
         ws.onopen = () => {
             setConnectionStatus("Subscribed");
@@ -254,14 +288,16 @@ export default function Home() {
     }, [tokenA, tokenB, updatePriceMap]);
 
     useEffect(() => {
-        fetchPrices();
+        // Auto-fetch only if tokens are present (optional) or keep empty
+        // fetchPrices();
         return () => {
             if (wsRef.current) wsRef.current.close();
         };
-    }, [fetchPrices]);
+    }, []); // Removed fetchPrices dependency to prevent loop, triggered by button now
 
     const currentPair = `${tokenA.toUpperCase()}/${tokenB.toUpperCase()}`;
     const isConnected = connectionStatus === 'Subscribed';
+    const hasPrices = Object.keys(prices).length > 0;
 
     return (
         <div className="min-h-screen w-full relative bg-black text-white font-mono overflow-x-hidden px-3 sm:px-6 md:px-12 lg:px-20">
@@ -321,18 +357,26 @@ export default function Home() {
                         <div className="relative">
                             <div className={cn(
                                 "relative px-6 py-3 rounded-lg border-2 backdrop-blur-sm transition-all duration-300",
-                                isConnected ? "border-emerald-400 bg-emerald-500/10 shadow-[0_0_30px_rgba(16,185,129,0.3)]" : "border-red-400 bg-red-500/10 shadow-[0_0_30px_rgba(239,68,68,0.3)]"
+                                isConnected ? "border-emerald-400 bg-emerald-500/10 shadow-[0_0_30px_rgba(16,185,129,0.3)]" : "border-red-400 bg-red-500/10 shadow-[0_0_30px_rgba(239,68,68,0.3)]",
+                                isConnecting && "border-amber-400 bg-amber-500/10"
                             )}>
                                 <div className="flex items-center gap-3">
-                                    <div className={cn("relative w-3 h-3 rounded-full", isConnected ? "bg-emerald-400" : "bg-red-400")}> 
+                                    <div className={cn("relative w-3 h-3 rounded-full", 
+                                        isConnecting ? "bg-amber-400" : (isConnected ? "bg-emerald-400" : "bg-red-400")
+                                    )}> 
                                         {isConnected && (
                                             <>
                                                 <span className="absolute inset-0 rounded-full bg-emerald-400 animate-ping"></span>
                                                 <span className="absolute inset-0 rounded-full bg-emerald-400 animate-pulse"></span>
                                             </>
                                         )}
+                                        {isConnecting && (
+                                             <span className="absolute inset-0 rounded-full bg-amber-400 animate-ping"></span>
+                                        )}
                                     </div>
-                                    <span className={cn("text-sm font-black uppercase tracking-wider", isConnected ? "text-emerald-400" : "text-red-400")}>{connectionStatus}</span>
+                                    <span className={cn("text-sm font-black uppercase tracking-wider", 
+                                        isConnecting ? "text-amber-400" : (isConnected ? "text-emerald-400" : "text-red-400")
+                                    )}>{connectionStatus}</span>
                                 </div>
                             </div>
                         </div>
@@ -364,8 +408,12 @@ export default function Home() {
                                     <input type="text" value={tokenB} onChange={(e) => setTokenB(e.target.value.toUpperCase())} className="w-full bg-black/90 border border-purple-500/30 rounded-lg py-3 px-4 text-xl sm:text-2xl font-black text-purple-400 focus:outline-none" placeholder="e.g. USDC" />
                                 </div>
 
-                                <NeonButton onClick={fetchPrices} disabled={isConnecting}>
-                                    <RefreshCw className={cn("w-5 h-5", isConnecting && "animate-spin")} />
+                                <NeonButton onClick={fetchPrices} disabled={isConnecting || !tokenA || !tokenB}>
+                                    {isConnecting ? (
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                    ) : (
+                                        <RefreshCw className="w-5 h-5" />
+                                    )}
                                     {isConnecting ? "SYNCING" : "SYNC"}
                                 </NeonButton>
                             </div>
@@ -436,34 +484,46 @@ export default function Home() {
                         </h2>
                         <div className="flex-1 h-px bg-gradient-to-r from-cyan-500/50 via-purple-500/30 to-transparent"></div>
                         <div className="px-3 sm:px-4 py-1 sm:py-2 bg-cyan-500/10 border border-cyan-500/30 rounded text-cyan-400 text-xs sm:text-sm font-bold">
-                            {Object.keys(prices).length} ACTIVE
+                            {isConnecting ? "SCANNING..." : `${Object.keys(prices).length} ACTIVE`}
                         </div>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
-                        {ALL_SOURCES.filter((ex) => prices[ex] !== undefined).map((exchange) => (
-                            <HolographicCard key={exchange} className="transform hover:scale-[1.02] transition-all duration-300">
-                                <div className="p-4 sm:p-6">
-                                    <div className="flex items-start justify-between mb-4 sm:mb-6">
-                                        <div>
-                                            <div className="flex items-center gap-3 mb-1">
-                                                <ExchangeLogo exchange={exchange} />
-                                                <h3 className="text-lg sm:text-xl font-black text-cyan-400">{exchange.toUpperCase()}</h3>
+                        {/* 
+                           LOGIC UPDATE: 
+                           If we are connecting, OR if we are connected but no prices have arrived yet,
+                           show 4 Skeleton Loaders to indicate activity.
+                        */}
+                        {(isConnecting || (isConnected && !hasPrices)) ? (
+                           Array.from({ length: 4 }).map((_, i) => (
+                             <ChartSkeleton key={`skeleton-${i}`} />
+                           ))
+                        ) : (
+                            /* Render actual charts once price data exists */
+                            ALL_SOURCES.filter((ex) => prices[ex] !== undefined).map((exchange) => (
+                                <HolographicCard key={exchange} className="transform hover:scale-[1.02] transition-all duration-300">
+                                    <div className="p-4 sm:p-6">
+                                        <div className="flex items-start justify-between mb-4 sm:mb-6">
+                                            <div>
+                                                <div className="flex items-center gap-3 mb-1">
+                                                    <ExchangeLogo exchange={exchange} />
+                                                    <h3 className="text-lg sm:text-xl font-black text-cyan-400">{exchange.toUpperCase()}</h3>
+                                                </div>
+                                                <p className="text-cyan-400/40 text-[10px] uppercase tracking-widest font-bold">{currentPair}</p>
                                             </div>
-                                            <p className="text-cyan-400/40 text-[10px] uppercase tracking-widest font-bold">{currentPair}</p>
+                                            <div className="text-right">
+                                                <div className="text-2xl sm:text-3xl font-black text-cyan-400 mb-1 tabular-nums">${prices[exchange]!.toFixed(4)}</div>
+                                                <div className="inline-flex px-2 py-1 bg-emerald-500/20 border border-emerald-500/30 rounded text-emerald-400 text-[10px] font-black">LIVE</div>
+                                            </div>
                                         </div>
-                                        <div className="text-right">
-                                            <div className="text-2xl sm:text-3xl font-black text-cyan-400 mb-1 tabular-nums">${prices[exchange]!.toFixed(4)}</div>
-                                            <div className="inline-flex px-2 py-1 bg-emerald-500/20 border border-emerald-500/30 rounded text-emerald-400 text-[10px] font-black">LIVE</div>
-                                        </div>
-                                    </div>
 
-                                    <div className="relative h-[240px] sm:h-[240px] md:h-[240px] w-full rounded-lg overflow-hidden border border-cyan-500/20 bg-black/50">
-                                        <TradingChart source={exchange} pair={currentPair} latestPrice={prices[exchange]} />
+                                        <div className="relative h-[240px] sm:h-[240px] md:h-[240px] w-full rounded-lg overflow-hidden border border-cyan-500/20 bg-black/50">
+                                            <TradingChart source={exchange} pair={currentPair} latestPrice={prices[exchange]} />
+                                        </div>
                                     </div>
-                                </div>
-                            </HolographicCard>
-                        ))}
+                                </HolographicCard>
+                            ))
+                        )}
                     </div>
                 </div>
             </div>
