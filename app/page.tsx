@@ -1,3 +1,4 @@
+
 "use client";
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import TradingChart from "./components/TradingChart";
@@ -115,11 +116,9 @@ const HolographicCard = ({ children, className, featured }: { children: React.Re
   </div>
 );
 
-// --- NEW: Loading Skeleton Component ---
 const ChartSkeleton = () => (
   <HolographicCard className="h-full">
     <div className="p-4 sm:p-6 h-full flex flex-col">
-      {/* Header Skeleton */}
       <div className="flex items-start justify-between mb-6">
         <div className="space-y-2">
           <div className="flex items-center gap-3">
@@ -134,12 +133,9 @@ const ChartSkeleton = () => (
         </div>
       </div>
 
-      {/* Chart Area Skeleton */}
       <div className="relative flex-1 min-h-[240px] w-full rounded-lg overflow-hidden border border-cyan-500/10 bg-black/30">
-        {/* Scanning Effect */}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-500/5 to-transparent animate-scan-line opacity-50"></div>
         
-        {/* Central Loading Indicator */}
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
           <div className="relative">
             <div className="absolute inset-0 bg-cyan-500 blur-lg opacity-20 animate-pulse"></div>
@@ -153,7 +149,6 @@ const ChartSkeleton = () => (
           <span className="text-[10px] font-mono text-cyan-500/40 tracking-widest uppercase">Est. Link...</span>
         </div>
 
-        {/* Grid Lines */}
         <div className="absolute inset-0" style={{
            backgroundImage: 'linear-gradient(rgba(0, 255, 255, 0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 255, 255, 0.02) 1px, transparent 1px)',
            backgroundSize: '20px 20px'
@@ -162,7 +157,6 @@ const ChartSkeleton = () => (
     </div>
   </HolographicCard>
 );
-// ---------------------------------------
 
 const GlitchText = ({ children, className }: { children: React.ReactNode; className?: string }) => (
   <div className={cn("relative inline-block", className)}>
@@ -194,6 +188,21 @@ const NeonButton = ({ children, onClick, disabled, variant = "primary" }: any) =
   </button>
 );
 
+// const DataStream = ({ label, value, trend }: { label: string; value: string; trend?: 'up' | 'down' }) => (
+//   <div className="flex items-center justify-between py-3 border-b border-cyan-500/10 group hover:border-cyan-500/30 transition-colors">
+//     <span className="text-cyan-400/60 text-xs uppercase tracking-wider font-mono">{label}</span>
+//     <div className="flex items-center gap-2">
+//       <span className="text-white font-mono font-bold">{value}</span>
+//       {trend && (
+//         <div className={cn(
+//           "w-0 h-0 border-l-[4px] border-r-[4px] border-l-transparent border-r-transparent",
+//           trend === 'up' ? "border-b-[6px] border-b-emerald-400" : "border-t-[6px] border-t-red-400"
+//         )}></div>
+//       )}
+//     </div>
+//   </div>
+// );
+
 interface PriceUpdate {
     source: string;
     pair: string;
@@ -219,6 +228,8 @@ const ALL_SOURCES = [
     "Binance", "Coinbase", "Kraken", "OKX", "Bitfinex", "Bybit", "KuCoin",
     "Bitget", "HTX", "Backpack", "Jupiter", "Raydium", "Orca"
 ];
+
+
 
 export default function Home() {
     const [prices, setPrices] = useState<Record<string, number | null>>({});
@@ -250,8 +261,7 @@ export default function Home() {
         wsRef.current = ws;
         setConnectionStatus("Connecting...");
         setIsConnecting(true);
-        setPrices({}); // Clear previous prices to trigger loading state
-        setArb(null);
+        setPrices({});
 
         ws.onopen = () => {
             setConnectionStatus("Subscribed");
@@ -289,12 +299,11 @@ export default function Home() {
     }, [tokenA, tokenB, updatePriceMap]);
 
     useEffect(() => {
-        // Auto-fetch only if tokens are present (optional) or keep empty
-        // fetchPrices();
+        fetchPrices();
         return () => {
             if (wsRef.current) wsRef.current.close();
         };
-    }, []); // Removed fetchPrices dependency to prevent loop, triggered by button now
+    }, [fetchPrices]);
 
     const currentPair = `${tokenA.toUpperCase()}/${tokenB.toUpperCase()}`;
     const isConnected = connectionStatus === 'Subscribed';
@@ -358,13 +367,11 @@ export default function Home() {
                         <div className="relative">
                             <div className={cn(
                                 "relative px-6 py-3 rounded-lg border-2 backdrop-blur-sm transition-all duration-300",
-                                isConnected ? "border-emerald-400 bg-emerald-500/10 shadow-[0_0_30px_rgba(16,185,129,0.3)]" : "border-red-400 bg-red-500/10 shadow-[0_0_30px_rgba(239,68,68,0.3)]",
+                                isConnected ? "border-emerald-400 bg-emerald-500/10 shadow-[0_0_30px_rgba(16,185,129,0.3)]" : "border-red-400 bg-red-500/10 shadow-[0_0_30px_rgba(239,68,68,0.3)]" ,
                                 isConnecting && "border-amber-400 bg-amber-500/10"
                             )}>
                                 <div className="flex items-center gap-3">
-                                    <div className={cn("relative w-3 h-3 rounded-full", 
-                                        isConnecting ? "bg-amber-400" : (isConnected ? "bg-emerald-400" : "bg-red-400")
-                                    )}> 
+                                    <div className={cn("relative w-3 h-3 rounded-full", isConnecting ? "bg-amber-400" : (isConnected ? "bg-emerald-400" : "bg-red-400"))}> 
                                         {isConnected && (
                                             <>
                                                 <span className="absolute inset-0 rounded-full bg-emerald-400 animate-ping"></span>
@@ -375,9 +382,7 @@ export default function Home() {
                                              <span className="absolute inset-0 rounded-full bg-amber-400 animate-ping"></span>
                                         )}
                                     </div>
-                                    <span className={cn("text-sm font-black uppercase tracking-wider", 
-                                        isConnecting ? "text-amber-400" : (isConnected ? "text-emerald-400" : "text-red-400")
-                                    )}>{connectionStatus}</span>
+                                    <span className={cn("text-sm font-black uppercase tracking-wider", isConnecting ? "text-amber-400" : (isConnected ? "text-emerald-400" : "text-red-400"))}>{connectionStatus}</span>
                                 </div>
                             </div>
                         </div>
@@ -490,11 +495,7 @@ export default function Home() {
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
-                        {/* 
-                           LOGIC UPDATE: 
-                           If we are connecting, OR if we are connected but no prices have arrived yet,
-                           show 4 Skeleton Loaders to indicate activity.
-                        */}
+                        
                         {(isConnecting || (isConnected && !hasPrices)) ? (
                            Array.from({ length: 4 }).map((_, i) => (
                              <ChartSkeleton key={`skeleton-${i}`} />
@@ -516,8 +517,16 @@ export default function Home() {
                                                 <div className="text-2xl sm:text-3xl font-black text-cyan-400 mb-1 tabular-nums">${prices[exchange]!.toFixed(4)}</div>
                                                 <div className="inline-flex px-2 py-1 bg-emerald-500/20 border border-emerald-500/30 rounded text-emerald-400 text-[10px] font-black">LIVE</div>
                                             </div>
+                                            <p className="text-cyan-400/40 text-[10px] uppercase tracking-widest font-bold">{currentPair}</p>
                                         </div>
+                                        <div className="text-right">
+                                            <div className="text-2xl sm:text-3xl font-black text-cyan-400 mb-1 tabular-nums">${prices[exchange]!.toFixed(4)}</div>
+                                            <div className="inline-flex px-2 py-1 bg-emerald-500/20 border border-emerald-500/30 rounded text-emerald-400 text-[10px] font-black">LIVE</div>
+                                        </div>
+                                    </div>
 
+                                    <div className="relative h-[240px] sm:h-[240px] md:h-[240px] w-full rounded-lg overflow-hidden border border-cyan-500/20 bg-black/50">
+                                        <TradingChart source={exchange} pair={currentPair} latestPrice={prices[exchange]} />
                                         <div className="relative h-[240px] sm:h-[240px] md:h-[240px] w-full rounded-lg overflow-hidden border border-cyan-500/20 bg-black/50">
                                             <TradingChart source={exchange} pair={currentPair} latestPrice={prices[exchange]} />
                                         </div>
@@ -604,3 +613,4 @@ export default function Home() {
         </div>
     );
 }
+
