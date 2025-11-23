@@ -517,16 +517,8 @@ export default function Home() {
                                                 <div className="text-2xl sm:text-3xl font-black text-cyan-400 mb-1 tabular-nums">${prices[exchange]!.toFixed(4)}</div>
                                                 <div className="inline-flex px-2 py-1 bg-emerald-500/20 border border-emerald-500/30 rounded text-emerald-400 text-[10px] font-black">LIVE</div>
                                             </div>
-                                            <p className="text-cyan-400/40 text-[10px] uppercase tracking-widest font-bold">{currentPair}</p>
+                                            
                                         </div>
-                                        <div className="text-right">
-                                            <div className="text-2xl sm:text-3xl font-black text-cyan-400 mb-1 tabular-nums">${prices[exchange]!.toFixed(4)}</div>
-                                            <div className="inline-flex px-2 py-1 bg-emerald-500/20 border border-emerald-500/30 rounded text-emerald-400 text-[10px] font-black">LIVE</div>
-                                        </div>
-                                    </div>
-
-                                    <div className="relative h-[240px] sm:h-[240px] md:h-[240px] w-full rounded-lg overflow-hidden border border-cyan-500/20 bg-black/50">
-                                        <TradingChart source={exchange} pair={currentPair} latestPrice={prices[exchange]} />
                                         <div className="relative h-[240px] sm:h-[240px] md:h-[240px] w-full rounded-lg overflow-hidden border border-cyan-500/20 bg-black/50">
                                             <TradingChart source={exchange} pair={currentPair} latestPrice={prices[exchange]} />
                                         </div>
