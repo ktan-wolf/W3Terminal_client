@@ -236,7 +236,7 @@ interface ArbitrageFeed {
 }
 
 const ALL_SOURCES = [
-    "Binance", "Coinbase", "Kraken", "OKX", "Bitfinex", "Bybit", "KuCoin",
+    "Binance", "Coinbase", "Kraken", "OKX", "Bitstamp", "Bitfinex", "Bybit", "KuCoin",
     "Bitget", "HTX", "Backpack", "Jupiter", "Raydium", "Orca"
 ];
 
