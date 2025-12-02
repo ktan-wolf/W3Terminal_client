@@ -9,6 +9,7 @@ const LOGO_SOURCES: Record<string, string> = {
   Coinbase: "/logos/coinbase.png",
   Kraken: "/logos/kraken.png",
   OKX: "/logos/OKX.png",
+  Bitstamp: "/logos/bitstamp.png",
   Bitfinex: "/logos/bitfinex.png",
   Bybit: "/logos/bybit.png",
   KuCoin: "/logos/kucoin.png",
